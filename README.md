@@ -36,12 +36,13 @@ https://www.googleapis.com/auth/youtube.readonly
 5. Put interaction model from `interaction-model.json`
 
 ## Usage
-Alexa, ask youtube client to play my videos
-Alexa, ask youtube client to play my liked videos
-Alexa, ask youtube client to play my disliked videos
-Alexa, ask youtube client to play {query} videos
-Alexa, ask youtube client to play category {category}
-Alexa, ask youtube client to play short {query} videos (> 3 min)
-Alexa, ask youtube client to play long {query} videos (< 20 min)
-Alexa, ask youtube client which playlists are available
-Alexa, ask youtube client to play Xth playlist (dont allow user to be mistaken when pronouncing playlist's name)
+- Alexa, ask youtube client to play my videos
+- Alexa, ask youtube client to play my liked videos
+- Alexa, ask youtube client to play my disliked videos
+- Alexa, ask youtube client to play {query} videos
+- Alexa, ask youtube client to play category {category}
+- Alexa, ask youtube client to play short {query} videos (> 3 min)
+- Alexa, ask youtube client to play long {query} videos (< 20 min)
+- Alexa, ask youtube client which playlists are available
+- Alexa, ask youtube client to play Xth playlist (dont allow user to be mistaken when pronouncing playlist's name)
+- Alexa, ask youtube client to play {query} streams
