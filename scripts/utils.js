@@ -2,10 +2,28 @@
 	utils.js - a file with standard functions
 */
 
+var mkdirp = require('mkdirp').sync;
 if (typeof fs === "undefined") fs = require("fs");
+
+global.respond = function (res, status, contenttype, data) {
+	res.statusCode = status;
+	res.setHeader("Content-Type", contenttype);
+	if (typeof data == 'object') 
+		data = JSON.stringify(data, null, '\t');
+	res.end(data);
+}
+
+global.getURL = function (req) {
+	var url = req.url;
+	if (url.indexOf("?") >= 0)
+		url = url.substring(0, url.indexOf("?"));
+	return url;
+}
 
 global.loadJSONFile = function (filename, defaultValue, strong) {
 	if (!fs.existsSync(filename)) {
+		if (filename.indexOf("/") >= 0)
+			mkdirp(filename.substring(0, filename.lastIndexOf("/")));
 		fs.writeFileSync(filename, JSON.stringify(defaultValue, "", "\t"));
 		if (strong)
 			throw "Put your data to config file (" + filename + ")";
@@ -117,4 +135,10 @@ global.chunkArray = function (myArray, chunk_size){
 
 Array.prototype.random = function () {
 	return this[~~(Math.random() * (this.length - 1))]
+}
+Array.prototype.forEachEnd = function (func, cb) {
+	for (var i = 0; i < this.length; ++i)
+		func(this[i]);
+	if (typeof cb === 'function')
+		cb();
 }

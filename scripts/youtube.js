@@ -1,30 +1,35 @@
+var https = require('https');
+
 module.exports = function (token) {
 	return {
-		request: function (method, url, query, accesstoken, data) {
+		request: function (method, path, query, accesstoken, data, RI) {
+			// add api key to query
 			if (typeof query == 'object') {
 				query.key = token;
-				var resstr = "";
+				var resstr = [];
 				for (var key in query)
-					resstr += escape(key) + "=" + escape(query[key]);
-				query = resstr;
+					resstr.push(encodeURIComponent(key) + "=" + encodeURIComponent(query[key]));
+				query = resstr.join("&");
 			} else if (typeof query === 'string') {
 				if (query.length == 0)
-					query="key="+escape(token);
-				else query += "&key="+escape(token);
+					query="key="+encodeURIComponent(token);
+				else query += "&key="+encodeURIComponent(token);
 			} else if (typeof query === "undefined") {
-				query='key='+escape(token);
+				query='key='+encodeURIComponent(token);
 			}
 
 			return new Promise((resolve, reject) => {
-				var req = https.request({
+				var headers = {"Content-Type": "application/json"};
+				if (accesstoken)
+					headers.Authorization = "Bearer " + accesstoken;
+				var options = {
 					method: method,
 					hostname: "content.googleapis.com",
 					path: path + "?" + query,
-					headers: {
-						"Authorization": "Bearer " + accesstoken,
-						"Content-Type": "application/json"
-					}
-				}, (res) => {
+					headers: headers
+				};
+				debug(RI, "request arguments: ", options)
+				var req = https.request(options, (res) => {
 					var c = [];
 					res.on('data', d => c.push(d));
 					res.on('end', function () {
