@@ -1,4 +1,5 @@
 node_modules/
-player-data.json
+playerData.json
 config.json
 youtube-dl.exe
+controlpage/data/

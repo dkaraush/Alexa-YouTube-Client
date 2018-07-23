@@ -3,6 +3,11 @@ var https = require('https');
 module.exports = function (token) {
 	return {
 		request: function (method, path, query, accesstoken, data, RI) {
+			if (typeof RI === "undefined" && method == "GET") {
+				RI = data;
+				data = undefined;
+			}
+
 			// add api key to query
 			if (typeof query == 'object') {
 				query.key = token;
@@ -28,7 +33,7 @@ module.exports = function (token) {
 					path: path + "?" + query,
 					headers: headers
 				};
-				debug(RI, "request arguments: ", options)
+				debug(RI, "[youtube api] request arguments: ", options)
 				var req = https.request(options, (res) => {
 					var c = [];
 					res.on('data', d => c.push(d));

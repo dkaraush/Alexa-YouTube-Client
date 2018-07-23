@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Dropbox Music Player Stats</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script type="text/javascript">
+		function getCookie(name) {
+		  var matches = document.cookie.match(new RegExp(
+		    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+		  ));
+		  return matches ? decodeURIComponent(matches[1]) : undefined;
+		}
+		function setCookie(name, value, options) {
+		  options = options || {};
+
+		  var expires = options.expires;
+
+		  if (typeof expires == "number" && expires) {
+		    var d = new Date();
+		    d.setTime(d.getTime() + expires * 1000);
+		    expires = options.expires = d;
+		  }
+		  if (expires && expires.toUTCString) {
+		    options.expires = expires.toUTCString();
+		  }
+
+		  value = encodeURIComponent(value);
+
+		  var updatedCookie = name + "=" + value;
+
+		  for (var propName in options) {
+		    updatedCookie += "; " + propName;
+		    var propValue = options[propName];
+		    if (propValue !== true) {
+		      updatedCookie += "=" + propValue;
+		    }
+		  }
+
+		  document.cookie = updatedCookie;
+		}
+	</script>
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
+	<style type="text/css">
+		html, head, body {
+			margin: 0;
+			padding: 0;
+			background: #ECEFF1;
+			transition: background 0.1s ease-in-out;
+			font-family: 'Open Sans';
+			-webkit-tap-highlight-color: transparent;
+		}
+		.eff {
+			background: rgba(100,181,246,0.2);
+		}
+		#header {
+			display: block;
+			width: 100%;
+			height: 3em;
+			background: #263238;
+			transition: background 0.1s ease-in-out;
+		}
+		#header_content {
+			max-width: 800px;
+			width: 85%;
+			margin: 0 auto;
+			height: 3em;
+		}
+		#title {
+			font-weight: 300;
+			color: white;
+			font-size: 1.25em;
+			float: left;
+			padding: 0.6em 0;
+		}
+		#menu {
+			vertical-align: middle;
+			display: inline-block;
+			height: 1.1em;
+			padding: 0.9em 0;
+			margin-left: 1em;
+		}
+		#menu a {
+			user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			-webkit-user-select: none;
+			color: #FF7043;
+			text-decoration: none;
+			margin-right: 0.5em;
+		}
+		#menu a:hover {
+			color: #FF5722;
+		}
+		#menu a:active {
+			color: #D84315;
+		}
+		#menu a.selected {
+			text-decoration: underline;
+			text-decoration-style: dashed;
+		}
+		#main {
+			display: block;
+			width: 100%;
+		}
+		#main_content {
+			width: 85%;
+			max-width: 800px;
+			margin: 0 auto;
+		}
+		#main h1 {
+			font-weight: 300;
+		}
+		#empty {
+			font-weight: bold;
+		    opacity: 0.75;
+		    text-align: center;
+		}
+		.key {
+			font-weight: bold;
+		}
+		#back {
+			display: inline-block;
+			background-image: url(data:image/png;base64,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);
+			background-position: center;
+			background-size: 90%;
+			width: 40px;
+			height: 40px;
+			filter: brightness(0);
+			cursor: pointer;
+			opacity: 0.8;
+			vertical-align: bottom;
+			overflow: hidden;
+			position: relative;
+			transition: filter 0.1s ease-in-out;
+			border-radius: 50%;
+		}
+		#back:hover {
+			opacity: 1;
+		}
+		.user, .error {
+			background: white;
+			border-radius: 2px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+			padding: 1em;
+			cursor: pointer;
+			position: relative;
+			margin-bottom: 1.5em;
+			overflow: hidden;
+			transition: background 0.1s ease-in-out;
+		}
+		.error {cursor: default;}
+		.user .id {
+			text-overflow: ellipsis; 
+			overflow: hidden; 
+			white-space: nowrap;
+			max-width: 100%;
+		}
+		.user .key {
+			font-weight: bold;
+		}
+		#nightswitcher {
+			display: inline-block;
+			float:right;
+			position: relative;
+			width: 36px;
+			height: 20px;
+			margin: 0.85em 0;
+			cursor: pointer;
+		}
+		#nightswitcher div:nth-child(1) {
+			position: absolute;
+			width: 36px;
+			height: 15px;
+			border-radius: 10px;
+			background: #9B9B9B;
+			top: 2px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+			transition: all 0.2s ease-in-out;
+		}
+		#nightswitcher div:nth-child(2) {
+			position: absolute;
+			width: 20px;
+			height: 20px;
+			border-radius: 10px;
+			background: #fff;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+			left: 0px;
+			transition: left 0.2s ease-in-out, background 0.2s ease-in-out;
+		}
+
+		#nightswitcher.enabled div:nth-child(1) {
+			background: #FF6D00;
+			opacity: 0.54;
+		}
+		#nightswitcher.enabled div:nth-child(2) {
+			left: 17px;
+			background: #FF6D00;
+		}
+		pre, div.code {
+			word-break: break-all;
+			overflow: hidden;
+			white-space: pre-wrap;
+			background: rgba(0,0,0,0.05);
+			padding: 0.5em;
+			border-radius: 2px;
+			transition: background 0.1s ease-in-out;
+			font-size: 0.8em;
+			font-family: Consolas, monospace;
+		}
+		#main h1, #main h2, #main h3 {
+			font-weight: 300;
+		}
+		.string {
+			color: #F4511E;
+		}
+		.number {
+			color: #0277BD;
+		}
+		.boolean {
+			color: #006064;
+		}
+
+		.log {
+			font-weight: bold;
+			color: #3F51B5;
+		}
+		.debug {
+			color: #AB47BC;
+			font-weight: bold;
+		}
+		.warn {
+			color: #FFEB3B;
+			font-weight: bold;
+		}
+		.err {
+			color: #E53935;
+			font-weight: bold;
+		}
+		div.code * {
+			display: inline-block;
+			vertical-align: top;
+		}
+		span.arg {
+			display: inline-block;
+			max-width: 500px;
+		}
+
+		#main_content p {
+			margin: 0;
+			margin-bottom: 0.5em;
+			word-break: break-all;
+		}
+		.event {
+			background: white;
+			border-radius: 2px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+			padding: 1em;
+			cursor: pointer;
+			position: relative;
+			overflow: hidden;
+			margin-bottom: 1.5em;
+		}
+		.event h2 {
+			font-weight: 300;
+			margin: 0;
+			float: left;
+		}
+		.event .time {
+			vertical-align: bottom;
+			float: right;
+		}
+		.pages {
+			float: right;
+		}
+		.navigation {
+			text-align: right;
+			margin: 0.5em 0;
+			user-select: none;
+			-ms-user-select: none;
+			-moz-user-select: none;
+			-webkit-user-select: none;
+		}
+		.nextpage, .previouspage {
+			cursor: pointer;
+			position: relative;
+			overflow: hidden;
+			padding: 0.5em 0;
+			display: inline-block;
+		}
+		.nextpage:hover, .previouspage:hover {
+			opacity: 0.7;
+		}
+		.nextpage.disabled, .previouspage.disabled {
+			cursor: no-drop;
+			opacity: 0.2;
+		}
+		.nextpage.disabled:hover, .previouspage.disabled:hover,
+		.nextpage.disabled:active, .previouspage.disabled:active {
+			cursor: no-drop;
+			opacity: 0.2;
+			text-decoration: none;
+		}
+		.separator {
+		    display: inline-block;
+		    padding: 0.5em 0;
+		    vertical-align: top;
+		}
+		.button {
+			border-radius: 2px;
+			transition: all 0.1s ease-in-out;
+			background: #03A9F4;
+			color: white;
+			overflow: hidden;
+			position: relative;
+			display: inline-block;
+			margin: 0 1em 0 0;
+			padding: 0.5em 1em;
+			cursor: pointer;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+		.button:hover {
+			background: #0288D1;
+		}
+		.red {
+			color: #F44336;
+		}
+		@media (max-width: 450px) {
+		    #title {
+		    }
+		    #header {
+		        height: 6.5em;
+		    }
+		    #header_content {
+		        position: relative;
+		        height: 6.5em;
+		    }
+		    #menu {
+		        margin: 0;
+		        position: absolute;
+		        bottom: 0.5em;
+		        left: 0em;
+		    }
+		}
+	</style>
+	<style type="text/css" id="nightcss">
+		html,head,body {
+			background: #263238;
+			color: #ECEFF1;
+		}
+		#header {
+			background: #212121;
+		}
+		.user, .event, .error {
+			background: #37474F;
+		}
+		#back {
+			filter: brightness(1);
+		}
+		pre {
+			background: rgba(255,255,255,0.05);
+		}
+		.number, .log {
+			color: #2196F3;
+		}
+		.boolean {
+			color: #26A69A;
+		}
+		.button {
+			background: #FF9800;
+		}
+		.button:hover {
+			background: #F57C00;
+		}
+		.red {
+			color: #EF5350;
+		}
+	</style>
+	<script type="text/javascript">
+		var night = (getCookie("darkmode")=="1");
+		if (!night) {
+			for (var i = 0; i < document.styleSheets.length; ++i) {
+				if (document.styleSheets[i].ownerNode.id == "nightcss")
+					document.styleSheets[i].disabled = true;
+			}
+		}
+		setCookie("darkmode",night?"1":"0",{path:"/{STATS_URL}/"});
+	</script>
+</head>
+<body>
+	{{CONTENT}}
+
+	<script type="text/javascript">
+		var night = (getCookie("darkmode")=="1");
+		var nightswitcher = document.querySelector("#nightswitcher");
+		nightswitcher.addEventListener("click", function () {
+			night = !night;
+			for (var i = 0; i < document.styleSheets.length; ++i) {
+				if (document.styleSheets[i].ownerNode.id == "nightcss")
+					document.styleSheets[i].disabled = !night;
+			}
+			nightswitcher.className = night?"enabled":"";
+			setCookie("darkmode",night?"1":"0",{path:"/{STATS_URL}/"});
+		});
+		if (night)
+			nightswitcher.className = "enabled";
+	</script>
+
+
+	<script type="text/javascript">
+		document.querySelectorAll("*[href]").forEach(function (div) {
+			div.addEventListener("click", function () {
+				setTimeout(function () {
+					var href = null;
+					for (var i = 0; i < div.attributes.length; ++i)
+						if (div.attributes[i].name == "href")
+							href = div.attributes[i].nodeValue;
+					window.open(href, "_self");
+				}, 500);
+			})
+		})
+	</script>
+
+	<script type="text/javascript">
+		document.querySelectorAll("pre, span.arg").forEach(function (pre) {
+			var content = pre.innerHTML;
+			content = content.replace(/"([^"]{0,})"/g,"<span class='string'>\"$1\"</span>");
+			content = content.replace(/(at )/g, "<span class='red'>$1</span>");
+			content = content.replace(/"[^"]*"|(\d+)/g,function(m,p1){
+				if (m[0]=="\""&&m[m.length-1]=="\"")
+					return m;
+				return "<span class='number'>"+m+"</span>";
+			});
+			content = content.replace(/(true|false)/g,"<span class='boolean'>$1</span>");
+			pre.innerHTML = content;
+		});
+	</script>
+
+	<!-- ripple button effect -->
+	<script type="text/javascript">
+		function init(div) {
+			div.style.userSelect="none";
+			div.style.webkitUserSelect="none";
+			div.style.mozUserSelect="none";
+			div.style.msUserSelect="none";
+			div.addEventListener("mousedown", function (e) {
+				if (e.button != 0) return;
+				var x=e.layerX, y=e.layerY, w=div.clientWidth, h=div.clientHeight;
+				var D1 = Math.sqrt(x*x + y*y);
+				var D2 = Math.sqrt((w-x)*(w-x) + y*y);
+				var D3 = Math.sqrt((w-x)*(w-x) + (h-y)*(h-y));
+				var D4 = Math.sqrt(x*x + (h-y)*(h-y));
+				var mD = Math.max(D1, D2, D3, D4);
+				var clickEff = document.createElement("div");
+				clickEff.style.position = "absolute";
+				clickEff.style.opacity = 1;
+				clickEff.className = "eff";
+				clickEff.style.borderRadius = "50%";
+				clickEff.style.transition = "all .5s ease-in-out";
+				clickEff.style.top = e.layerY+"px";
+				clickEff.style.left = e.layerX+"px";
+				clickEff.style.width = "0px";
+				clickEff.style.height = "0px";
+				clickEff.style.padding = "0px";
+				clickEff.style.margin = "0px";
+				clickEff.style.zIndex = 5;
+				div.appendChild(clickEff);
+				setTimeout(function () {
+					clickEff.style.width=clickEff.style.height=mD*2+"px";
+					clickEff.style.left=e.layerX-(mD)+"px";
+					clickEff.style.top=e.layerY-(mD)+"px";
+				}, 5);	
+			});
+			function mouseup(e) {
+				div.querySelectorAll(".eff").forEach(function (clickEff) {
+					clickEff.style.opacity = 0;
+					setTimeout(function () {
+						clickEff.remove();
+					},500);
+				});
+			}
+			div.addEventListener("mouseup", mouseup);
+			div.addEventListener("mouseover", mouseup);
+		}
+		document.querySelectorAll(".user, #back, .event, .previouspage, .nextpage, .button").forEach(init);
+	</script>
+</body>
+</html>

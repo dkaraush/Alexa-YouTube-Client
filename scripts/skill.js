@@ -9,7 +9,6 @@ module.exports = async function (youtube) {
 		errorHandler: errorHandler
 	}
 }
-
 var requestHandlers = function (youtube) {
 	var reqs = [{
 		name: "LaunchRequest",
@@ -22,7 +21,7 @@ var requestHandlers = function (youtube) {
 		_handle(RI, handlerInput, user, slots, res) {
 			return res.speak("Sorry, I did not understand. Say again.").reprompt("Say again");
 		}
-	}
+	},
 	{
 		name: "SessionEndedRequest",
 		_handle(RI, handlerInput, user, slots, res) {
@@ -38,24 +37,33 @@ var requestHandlers = function (youtube) {
 	{
 		name: "PlayLikedVideosIntent",
 		_handle: async function(RI, handlerInput, user, slots, res) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
+			
 			return await runPlaylist(RI, "PlayLikedVideosIntent",
 								["GET", "/youtube/v3/videos", {
 									part: "snippet,contentDetails",
 									maxResults: 50,
 									myRating: "like"
-								}, user.accessToken, RI],
+								}, user.accessToken],
 								youtube, user, res);
 		}
 	},
 	{
 		name: "PlayDislikedVideosIntent",
 		_handle: async function(RI, handlerInput, user, slots, res) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
 			return await runPlaylist(RI, "PlayDislikedVideosIntent",
 								["GET", "/youtube/v3/videos", {
 									part: "snippet,contentDetails",
 									maxResults: 50,
 									myRating: "dislike"
-								}, user.accessToken, RI],
+								}, user.accessToken],
 								youtube, user, res);
 		}
 	},
@@ -63,10 +71,33 @@ var requestHandlers = function (youtube) {
 		name: "AcceptIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			var data = playerData[user.userId];
-			if (!data || ["PlayLikedVideosIntent", "PlayDislikedVideosIntent"].indexOf(data.from) == -1)
+			if (!data || ["PlayLikedVideosIntent", "PlayDislikedVideosIntent", "SearchVideoIntent"].indexOf(data.from) == -1)
 				return res.speak("What yes?");
 
 			return await runVideo(RI, data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
+		}
+	},
+	{
+		name: "AMAZON.NextIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var data = playerData[user.userId];
+			if (!data)
+				return res.speak("What next?");
+			if (!data.nearly)
+				data.index++;
+			data.nearly = false;
+			return await runVideo(RI, data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
+		}
+	},
+	{
+		name: "AudioPlayer.PlaybackNearlyFinished",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var data = playerData[user.userId];
+			if (!data)
+				return res.speak("What next?");
+			data.index++;
+			data.nearly = true;
+			return await runVideo(RI, data, false, "ENQUEUE", hasVideoApp, youtube, user, res);
 		}
 	},
 	{
@@ -78,12 +109,41 @@ var requestHandlers = function (youtube) {
 	{
 		name: "SearchVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
-			return await runPlaylist("SearchVideoIntent",
+			return await runPlaylist(RI, "SearchVideoIntent",
 								["GET", "/youtube/v3/search", {
 									part: "snippet,id",
+									type: "video",
 									maxResults: 50,
 									q: slots.query.value
-								}, user.accessToken, RI],
+								}, null, RI],
+								youtube, user, res);
+		}
+	},
+	{
+		name: "SearchShortVideoIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			return await runPlaylist(RI, "SearchVideoIntent",
+								["GET", "/youtube/v3/search", {
+									type: "video",
+									part: "snippet,id",
+									videoDuration: "short",
+									maxResults: 50,
+									q: slots.query.value
+								}, null, RI],
+								youtube, user, res);
+		}
+	},
+	{
+		name: "SearchLongVideoIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			return await runPlaylist(RI, "SearchVideoIntent",
+								["GET", "/youtube/v3/search", {
+									part: "snippet,id",
+									type: "video",
+									videoDuration: "long",
+									maxResults: 50,
+									q: slots.query.value
+								}, null, RI],
 								youtube, user, res);
 		}
 	}
@@ -176,7 +236,9 @@ async function runVideo(RI, data, cantalk, behavior, type, youtube, user, res) {
 
 		var requestargs = data.req;
 		requestargs[2].pageToken = data.nextpagetoken;
+		requestargs[requestargs.length-1] = RI;
 		var r = await youtube(...requestargs);
+		r.items = r.items.filter(i => typeof getID(i) !== 'undefined');
 
 		if (['youtube#searchListResponse', 'youtube#videoListResponse'].indexOf(r.kind) < 0) {
 			err(RI, "we received something wrong (non-valid kind of response)", r);
@@ -188,10 +250,10 @@ async function runVideo(RI, data, cantalk, behavior, type, youtube, user, res) {
 				log("missing duration => requesting contentDetails");
 				var dr = await youtube.request("GET", "/youtube/v3/videos", {
 					part: "contentDetails",
-					id: Array.from(items, i => i.id).join(",")
+					id: Array.from(items, i => getID(i)).join(",")
 				}, user.accessToken, RI);
 				if (dr.kind != "youtube#videoListResponse" || dr.items.length != r.items.length)  {
-					err(RI, "we received something wrong (non-valied kind of response)", r);
+					error(RI, "we received something wrong (non-valied kind of response)", r);
 					return err(res);
 				}
 				for (var i = 0; i < items.length; ++i)
@@ -204,7 +266,7 @@ async function runVideo(RI, data, cantalk, behavior, type, youtube, user, res) {
 		}
 	}
 
-	var videoId = data.pitems[data.index].id;
+	var videoId = getID(data.pitems[data.index]);
 	if (!videoId) {
 		warn(RI, "id field in playerData is missing!", data);
 		return cantalk ? err(res) : res;
@@ -233,10 +295,15 @@ async function runVideo(RI, data, cantalk, behavior, type, youtube, user, res) {
 			})
 	});
 }
+function getID(videoitem) {
+	return typeof videoitem.id === "string" ? videoitem.id : videoitem.id.videoId;
+}
 function youtubedl(id, type, RI) {
-	return new Promise((resolve, reject) => {
+	return new Promise(async function (resolve, reject) {
 		var resolved = false;
-		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", ["--format", (type ? 140 : 22), "-g", "https://www.youtube.com/watch?v=" + id]);
+		
+		debug("[youtube-dl] getting available formats... (args: " + ["-F", "https://www.youtube.com/watch?v="+id].join(" ") + ")");
+		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", ["-f", (type ? "m4a" : "mp4"), "-g", "https://www.youtube.com/watch?v=" + id]);
 		youtubedl.stdout.on('data', function (data) {
 			if (resolved) return;
 			if (typeof data !== "string") data = data.toString();
@@ -249,47 +316,56 @@ function youtubedl(id, type, RI) {
 		youtubedl.stderr.on('data', function (data) {
 			if (resolved) return;
 			if (typeof data !== "string") data = data.toString();
-			err(RI, "youtube-dl stderr: ", data);
-			reject(data);
+			error(RI, "[youtube-dl] stderr: ", data);
+		});
+		youtubedl.on('close', function () {
+			if (!resolved)
+				reject();
 		})
 	})
 }
 async function runPlaylist(RI, intentname, requestargs, youtube, user, res) {
-	if (!user.accessToken) {
-		log("accessToken is missing => send linkAccount card");
-		return linkFirst(res);
-	}
-
-	var r = await youtube.request(...requestargs);
+	var ra = requestargs.concat([RI]);
+	var r = await youtube.request(...ra);
 
 	if (["youtube#searchListResponse", "youtube#videoListResponse"].indexOf(r.kind) < 0) {
-		err(RI, "we received something wrong (non-valied kind of response)", r);
+		error(RI, "we received something wrong (non-valied kind of response)", r);
 		return err(res);
 	}
 
-	var items = r.items;
+	var items = r.items.filter(i => typeof getID(i) !== "undefined");
 	if (items.length == 0) {
 		log(RI, "items.length == 0  => empty playlist");
 		return res.speak("Empty.");
 	}
 	if (typeof items[0].contentDetails === "undefined") {
-		log("missing contentDetails => requesting from YouTube");
+		log(RI, "missing contentDetails => requesting from YouTube");
 		var dr = await youtube.request("GET", "/youtube/v3/videos", {
 			part: "contentDetails",
-			id: Array.from(items, i => i.id).join(",")
-		}, user.accessToken);
+			maxResults: 50,
+			id: Array.from(items, i => getID(i)).join(",")
+		}, null, RI);
 		if (dr.kind != "youtube#videoListResponse" || dr.items.length != items.length)  {
-			err(RI, "we received something wrong (non-valied kind of response)", r);
+			error(RI, "we received something wrong (non-valied kind of response)", dr);
 			return err(res);
 		}
 		for (var i = 0; i < items.length; ++i)
 			items[i].contentDetails = {duration: dr.items[i].contentDetails.duration};
 	}
+	log(RI, "received " + r.pageInfo.totalResults + " videos");
 	var speech = "";
-	speech += "There are " + r.pageInfo.totalResults + " video" + (r.pageInfo.totalResults>1?"s":"") + ". ";
-	speech += "First video is: ";
-	speech += await describeVideo(items[0], res);
-	speech += ". Shall I play it?";
+	if (items[0].contentDetails.duration != "PT0S") {
+		if (r.pageInfo.totalResults != 1000000)
+			speech += "There are " + r.pageInfo.totalResults + " video" + (r.pageInfo.totalResults>1?"s":"") + ". ";
+		speech += "First video is: ";
+		speech += await describeVideo(items[0], res);
+		speech += ". Shall I play it?";
+	} else {
+		log(RI, "first is live stream: playing it");
+		speech += "I found live stream. ";
+		speech += await describeVideo(items[0], res);
+		speech += ". Shall I play it?";
+	} 
 	playerData[user.userId] = {
 		from: intentname,
 		req: requestargs,
@@ -303,13 +379,12 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res) {
 function linkFirst(r) {
 	return r.speak("To use this feature you have to link your YouTube account first. Check your mobile phone.");
 }
-function err(r) {
-	console.log((new Error()).stack);
+function err(r) { 	
 	return r.speak("Something went wrong. Try again later.");
 }
 function describeVideo(video) {
 	return new Promise((resolve) => {
-		translate(video.snippet.title, {to: "en"}).then(res => {
+		translate(video.snippet.title).then(res => {
 			var title = res.text;
 
 			title = title.replace(/\&/g, " and ");
@@ -319,14 +394,19 @@ function describeVideo(video) {
 			if (dMatch != null && dMatch.length == 4) {
 				var mwords = {H: "hour", M: "minute", S: "second"};
 				duration = Array.from(dMatch.slice(1), d => {
-					if (typeof d === "undefined") return "";
+					if (typeof d === "undefined") 
+						return "";
 					var m = d[d.length-1];
-					if (m == "S") return "";
+					if (m == "S") 
+						return "";
 					var n = parseInt(d.substring(0, d.length-1));
 					return n + " " + mwords[m] + (n>1?"s":"");
 				}).join(" ");
 				if (duration == "")
 					duration = "less 1 minute";
+			}
+			if (video.contentDetails.duration == "PT0S") {
+				duration = null;
 			}
 
 			resolve(title + ". "+(duration!=null?("It's duration: " + duration):""));

@@ -1,0 +1,25 @@
+<div id="header">
+	<div id="header_content">
+		<div id="title">Youtube Player</div>
+		<div id="menu">
+			<a href="{STATS_URL}/main/" class="item selected">Users</a>
+			<a href="{STATS_URL}/errors/" class="item">Errors</a>
+			<a href="{STATS_URL}/status/" class="item">Status</a>
+		</div>
+		<div id="nightswitcher" class="">
+			<div></div>
+			<div></div>
+		</div>
+	</div>
+</div>
+<div id="main">
+	<div id="main_content">
+		<h1>Users ({USERS_COUNT})</h1>
+		{{{USER_TEMPLATE
+		<div class="user" href="{STATS_URL}/user?id={USER_ID}&event_page=-1">
+			<div class="id"><span class="key">ID</span>: {USER_ID}</div>
+			<div class="last-activity"><span class="key">Last activity</span>: {USER_LAST}</div>
+		</div>
+		}}}
+	</div>
+</div>

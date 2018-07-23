@@ -13,10 +13,11 @@ async function start() {
 	require('./scripts/utils.js');
 	global.config = loadJSONFile("config.json", {
 		port: 8034,
-		youtube_access_token: null,
-		youtubedl: (/^win/.test(process.platform) ? 'youtube-dl.exe' : 'youtube-dl')
+		youtube_api_key: null,
+		youtubedlpath: (/^win/.test(process.platform) ? 'youtube-dl.exe' : 'youtube-dl')
 	}, true);
 	controlpage = require('./controlpage/index.js');
+	controlpage.url = config.controlpage_url || randomString(16);
 	var youtube = require('./scripts/youtube.js')(config.youtube_api_key);
 	var lambda = await require('./scripts/skill.js')(youtube);
 
@@ -26,6 +27,11 @@ async function start() {
 
 	function requestHandler(req, res) {
 		var url = getURL(req);
+		var query = getQuery(req);
+		if (url.split('/').length >= 2 && url.split('/')[1] == controlpage.url) {
+			controlpage.receive(req, res, url, query);
+			return;
+		}
 		if (url != "/alexa/" || req.method != "POST") {
 			respond(res, 404, "text/html", "<p>We serve only <pre>/alexa/</pre> with POST method</p>");
 			return;
@@ -37,12 +43,13 @@ async function start() {
 			var json = JSON.parse(data);
 			var reqId = json.request.requestId;
 			var userId = json.context.System.user.userId;
-			controlpage.startReportingRequest(reqId, userId, json, req, res);
+			controlpage.startReportingRequest(reqId, userId, json, req);
 			var headers = req.headers;
 			verifier(headers.signaturecertchainurl, headers.signature, data, (err) => {
 				if (err) {
 					respond(res, 400, "application/json", {status: 'failure', reason: err});
-					controlpage.report('Bad signature request.', req.connection.remoteAddress, err);
+					err(RI, 'Bad signature request.', req.connection.remoteAddress, err);
+					controlpage.stopReportingRequest(reqId, userId, res, response);
 					return;
 				}
 
@@ -56,11 +63,11 @@ async function start() {
 				skill.invoke(json)
 					.then(response => {
 						respond(res, 200, "application/json", response);
-						controlpage.stopReportingRequest(reqId);
+						controlpage.stopReportingRequest(reqId, userId, res, response);
 					})
 					.catch(err => {
 						respond(res, 500, "application/json", {status: 'failure', reason: err});
-						controlpage.stopReportingRequest(reqId);
+						controlpage.stopReportingRequest(reqId, userId, res, {status: 'failure', reason: err});
 					})
 
 			})
@@ -84,28 +91,29 @@ async function start() {
 			throw err;
 		}
 		console.log("Server listens on :" + config.port.toString().magenta);
+		console.log("Control page is available at " + ("/"+controlpage.url).magenta)
 	});
 }
 
 start();
 
 global.exitHandler = function(options, err, code) {
+	if (typeof err !== "undefined" && err != null) {
+    	console.log ((err.stack || err.message || err.getMessage || err.toString()).red);
+		controlpage.reportError("Uncaught exception", err);
+    }
     if (options.exit) {
-		console.log("Saving...");
-		saveJSONFile("player-data.json", playerData);
+    	console.log("Saving...")
+		saveJSONFile("playerData.json", playerData);
 		controlpage.save();
 		console.log("Saved.".green.bold);
-	}
-	if (typeof err !== "undefined") {
-    	console.log (err.stack.red);
-		controlpage.report("Uncaught exception", null, err);
-    }
-    if (options.exit)
 		process.exit(code ? code : 0);
+	}
 }
+process.stdin.on('data', exitHandler.bind(null, {exit: true}))
 
-process.on('exit', exitHandler.bind(null,{cleanup:true}));
 process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+process.on('SIGTERM', exitHandler.bind(null, {exit:true}));
 process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
 process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
 process.on('uncaughtException', exitHandler.bind(null, {exit:false}));

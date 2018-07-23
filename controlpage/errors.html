@@ -1,0 +1,26 @@
+
+<div id="header">
+	<div id="header_content">
+		<div id="title">Youtube Player</div>
+		<div id="menu">
+			<a href="{STATS_URL}/main/" class="item">Users</a>
+			<a href="{STATS_URL}/errors/" class="item selected">Errors</a>
+			<a href="{STATS_URL}/status/" class="item">Status</a>
+		</div>
+		<div id="nightswitcher" class="">
+			<div></div>
+			<div></div>
+		</div>
+	</div>
+</div>
+<div id="main">
+	<div id="main_content">
+		<h1>Errors</h1>
+		{{{ERROR_TEMPLATE
+		<div class='error'>
+			<p><span class='key'>Time: </span>{ERROR_TIME_DIFFERENCE} <i>({ERROR_TIME_FULL})</i></p>
+			<pre>{ERROR_JSON}</pre>
+		</div>
+		}}}
+	</div>
+</div>

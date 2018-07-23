@@ -1,0 +1,59 @@
+
+<div id="header">
+	<div id="header_content">
+		<div id="title">Youtube Player</div>
+		<div id="menu">
+			<a href="{STATS_URL}/main/" class="item selected">Users</a>
+			<a href="{STATS_URL}/errors/" class="item">Errors</a>
+			<a href="{STATS_URL}/status/" class="item">Status</a>
+		</div>
+		<div id="nightswitcher" class="">
+			<div></div>
+			<div></div>
+		</div>
+	</div>
+</div>
+<div id="main">
+	<div id="main_content">
+		<h1><span href="{STATS_URL}/main/" id="back"></span> Users - User</h1>
+		<p><span class="key">ID:</span> {CURRENT_USER_ID}</p>
+		<p><span class="key">Last activity: </span>{CURRENT_USER_LAST_TEXT}&emsp;<i>({CURRENT_USER_LAST_DATETIME})</i></p>
+		<p><span class="key">Youtube: </span>{CURRENT_USER_YOUTUBE_CONNECTED}</p>
+		<p><span class="key">Youtube Access Token: </span>{CURRENT_USER_YOUTUBE_TOKEN}</p>
+		<p><span class="key">Has display: </span>{CURRENT_USER_HAS_DISPLAY}</p>
+		{{{PLAYER_DATA_TEMPLATE
+			<h2>Player Data</h2>
+			<pre>{JSON}</pre>
+		}}}
+		<h2 id="events">Events <span class="pages"><span id="page-current">{EVENTS_CURRENT_PAGE}</span> of <span id="pages-count">{EVENTS_PAGE_COUNT}</span></span></h2>
+		<h3 class='navigation'><div class="previouspage">previous</div> <div class='separator'>/</div> <div class="nextpage">next</div></h3>
+		{{{EVENT_TEMPLATE
+		<div href="{STATS_URL}/event?id={CURRENT_USER_ID}&event={EVENT_INDEX}" class="event">
+			<h2 class="short">{EVENT_SHORT}</h2>
+			<div class="time">{EVENT_TIME_DIFFERENCE}</div>
+		</div>}}}
+	</div>
+</div>
+<script type="text/javascript">
+	var nextpage = document.querySelector(".nextpage"), prevpage = document.querySelector(".previouspage");
+	var pages_count = parseInt(document.querySelector("#pages-count").innerText);
+	var current_page = parseInt(document.querySelector("#page-current").innerText);
+	if (current_page+1>pages_count) {
+		nextpage.className = "nextpage disabled";
+	} else {
+		var nexthref = location.href;
+		if (nexthref.indexOf("event_page")>=0)
+			nexthref = nexthref.replace(/event_page=([-]{0,1}\d+)/g, "event_page="+(current_page));
+		else nexthref += "event_page="+current_page;
+		nextpage.setAttribute("href", nexthref);
+	}
+	if (current_page-1<=0) {
+		prevpage.className = "previouspage disabled";
+	} else {
+		var prevhref = location.href;
+		if (prevhref.indexOf("event_page")>=0)
+			prevhref = prevhref.replace(/event_page=([-]{0,1}\d+)/g, "event_page="+(current_page-2));
+		else prevhref += "event_page="+(current_page-2);
+		prevpage.setAttribute("href", prevhref);
+	}
+</script>

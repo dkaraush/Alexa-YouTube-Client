@@ -1,0 +1,34 @@
+
+<div id="header">
+	<div id="header_content">
+		<div id="title">YouTube Player</div>
+		<div id="menu">
+			<a href="{STATS_URL}/main/" class="item selected">Users</a>
+			<a href="{STATS_URL}/errors/" class="item">Errors</a>
+			<a href="{STATS_URL}/status/" class="item">Status</a>
+		</div>
+		<div id="nightswitcher" class="">
+			<div></div>
+			<div></div>
+		</div>
+	</div>
+</div>
+<div id="main">
+	<div id="main_content">
+		<h1><span href="{STATS_URL}/user?id={CURRENT_USER_ID}&event_page=-1" id="back"></span> Users - User - Event</h1>
+		{{{EVENT_INFO_TEMPLATE
+		<p><span class='key'>Time: </span>{EVENT_TIME_DIFFERENCE}&emsp;({EVENT_TIME_FULL})</p>
+		<h3>Logs:</h3>
+		<div class='code'>{EVENT_LOGS}</div>
+		<h3>Request:</h3>
+		<pre>{EVENT_REQUEST}</pre>
+		<h3>Response:</h3>
+		<pre>{EVENT_RESPONSE}</pre>
+		<br><br>
+		<h3>Player data before request:</h3>
+		<pre>{EVENT_PLAYERDATA_WAS}</pre>
+		<h3>Player data after request:</h3>
+		<pre>{EVENT_PLAYERDATA_NOW}</pre>
+		}}}
+	</div>
+</div>

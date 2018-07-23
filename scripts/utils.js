@@ -6,6 +6,8 @@ var mkdirp = require('mkdirp').sync;
 if (typeof fs === "undefined") fs = require("fs");
 
 global.respond = function (res, status, contenttype, data) {
+	if (res.finished)
+		return;
 	res.statusCode = status;
 	res.setHeader("Content-Type", contenttype);
 	if (typeof data == 'object') 
@@ -47,7 +49,7 @@ global.loadJSONFile = function (filename, defaultValue, strong) {
 
 global.saveJSONFile = function (filename, content) {
 	if (typeof content !== "string")
-		content = JSON.stringify(content, "", "\t");
+		content = JSON.stringify(content, null, "\t");
 	fs.writeFileSync(filename, content);
 }
 
@@ -55,6 +57,8 @@ global.parseQuery = function (query_string) {
 	var query = {};
 	var params = query_string.split("&");
 	for (var i = 0; i < params.length; ++i) {
+		if (params[i].length == 0 || params[i].indexOf('=') < 0)
+			continue;
 		var key = params[i].substring(0, params[i].indexOf("="));
 		var value = params[i].substring(params[i].indexOf("=")+1);
 		query[decodeURIComponent(key)] = decodeURIComponent(value);
@@ -82,6 +86,10 @@ global.stringifyQuery = function (obj) {
 
 global.getRawQuery = function (req) {
 	return (req.url.indexOf("?") >= 0) ? req.url.substring(req.url.indexOf("?")+1) : "";
+}
+
+global.getQuery = function (req) {
+	return parseQuery(getRawQuery(req));
 }
 
 global.upperCaseHeader = function (str) {
