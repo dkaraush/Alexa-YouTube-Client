@@ -307,7 +307,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		r.items = r.items.filter(i => typeof getID(i) !== 'undefined');
 
 		if (['youtube#searchListResponse', 'youtube#videoListResponse'].indexOf(r.kind) < 0) {
-			err(RI, "we received something wrong (non-valid kind of response)", r);
+			error(RI, "we received something wrong (non-valid kind of response)", r);
 			return cantalk ? err(res) : res;
 		}
 
@@ -388,8 +388,10 @@ function youtubedl(id, type, RI) {
 			error(RI, "[youtube-dl] stderr: ", data);
 		});
 		youtubedl.on('close', function () {
-			if (!resolved)
+			if (!resolved) {
+				error(RI, "[youtube-dl] closed");
 				reject();
+			}
 		})
 	})
 }
@@ -453,7 +455,7 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 	if (data.describing)
 		return res.speak(speech).reprompt('Shall I play it?');
 	else {
-		return await runVideo(RI, intentname, data, true, "REPLACE_ALL", type, youtube, user, user, res);
+		return await runVideo(RI, intentname, data, true, "REPLACE_ALL", type, youtube, user, res);
 	}
 }
 function linkFirst(r) {
