@@ -235,12 +235,12 @@ module.exports.receive = function (req, res, url, query) {
 	var dirs = url.split("/");
 	if (url == "restart") {
 		res.statusCode = 302;
-		res.setHeader("Location", "/" + module.exports.url + "/");
+		res.setHeader("Location", config.server_url + "/" + module.exports.url + "/");
 		res.end();
 		exitHandler({exit: true},null,36);
 	} else if (url == "update") {
 		res.statusCode = 302;
-		res.setHeader("Location", "/" + module.exports.url + "/");
+		res.setHeader("Location", config.server_url + "/" + module.exports.url + "/");
 		res.end();
 		exitHandler({exit: true},null,37);
 	}
