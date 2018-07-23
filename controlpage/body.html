@@ -384,7 +384,7 @@
 					document.styleSheets[i].disabled = true;
 			}
 		}
-		setCookie("darkmode",night?"1":"0",{path:"{STATS_URL}/"});
+		setCookie("darkmode",night?"1":"0",{path:"{STATS_URL}"});
 	</script>
 </head>
 <body>
@@ -400,7 +400,7 @@
 					document.styleSheets[i].disabled = !night;
 			}
 			nightswitcher.className = night?"enabled":"";
-			setCookie("darkmode",night?"1":"0",{path:"{STATS_URL}/"});
+			setCookie("darkmode",night?"1":"0",{path:"{STATS_URL}"});
 		});
 		if (night)
 			nightswitcher.className = "enabled";
