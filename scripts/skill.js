@@ -431,7 +431,7 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 		length: r.pageInfo.totalResults,
 		nextpagetoken: r.nextPageToken,
 		index: 0,
-		describing: typeof data.describing === "undefined" ? true : false
+		describing: typeof data === "undefined" || typeof data.describing === "undefined" ? true : data.describing
 	};
 	if (data.describing) {
 		if (items[0].contentDetails.duration != "PT0S") {

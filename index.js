@@ -10,7 +10,7 @@ const dontRemove = [
 	"./.git",
 	"./master.zip",
 	"./config.json",
-	"./playingData.json",
+	"./playerData.json",
 	"./controlpage/data"
 ]
 
