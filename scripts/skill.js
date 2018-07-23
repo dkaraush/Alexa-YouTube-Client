@@ -36,7 +36,7 @@ var requestHandlers = function (youtube) {
 	},
 	{
 		name: "PlayLikedVideosIntent",
-		_handle: async function(RI, handlerInput, user, slots, res) {
+		_handle: async function(RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			if (!user.accessToken) {
 				log("accessToken is missing => send linkAccount card");
 				return linkFirst(res);
@@ -53,7 +53,7 @@ var requestHandlers = function (youtube) {
 	},
 	{
 		name: "PlayDislikedVideosIntent",
-		_handle: async function(RI, handlerInput, user, slots, res) {
+		_handle: async function(RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			if (!user.accessToken) {
 				log("accessToken is missing => send linkAccount card");
 				return linkFirst(res);
