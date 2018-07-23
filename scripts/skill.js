@@ -72,7 +72,8 @@ var requestHandlers = function (youtube) {
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			var data = playerData[user.userId];
 			if (!data || ["PlayLikedVideosIntent", "PlayDislikedVideosIntent", "SearchVideoIntent",
-						  "SearchShortVideoIntent", "SearchLongVideoIntent", "PlayMyVideosIntent"].indexOf(data.from) == -1)
+						  "SearchShortVideoIntent", "SearchLongVideoIntent", "PlayMyVideosIntent",
+						  "PlayCategoryIntent"].indexOf(data.from) == -1)
 				return res.speak("What yes?");
 
 			return await runVideo(RI, data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
@@ -164,6 +165,35 @@ var requestHandlers = function (youtube) {
 								}, user.accessToken, RI],
 								youtube, user, res);
 		}
+	},
+	{
+		name: "PlayCategoryIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var categoryNum;
+			try {
+				var status = slots.category.resolutions.resolutionsPerAuthority[0].status.code;
+				if (status != "ER_SUCCESS_MATCH") {
+					log(RI, "status = \""+status+"\" (must be \"ER_SUCCESS_MATCH\")");
+					return res.speak("Category isn't found. Check skill's description for available categories.");
+				}
+				categoryNum = parseInt(slots.category.resolutions.resolutionsPerAuthority[0].values[0].value.name);
+				if (isNaN(categoryNum)) {
+					log(RI, "category number is NaN", slots.category.resolutions.resolutionsPerAuthority[0].values[0].value.name);
+					return res.speak("Parsing category error. Try again later.");
+				}
+			} catch (e) {
+				warn(RI, "catched err (bad category) ", e);
+				return res.speak("Category isn't found. Check skill's description for available categories.");
+			}
+			return await runPlaylist(RI, "PlayCategoryIntent",
+								["GET", "/youtube/v3/search", {
+									part: "snippet,id",
+									type: "video",
+									maxResults: 50,
+									videoCategoryId: categoryNum
+								}, null, RI],
+								youtube, user, res);
+		}
 	}
 	];
 
@@ -214,12 +244,12 @@ var requestHandlers = function (youtube) {
 					Promise.resolve(res).then(function (val) {
 						if (typeof val.getResponse === "function")
 							val = val.getResponse();
-						resolve(val);
 						if (handler.name !== "AMAZON.FallbackIntent" && handlerInput.requestEnvelope.session) {
 							var attr = handlerInput.attributesManager.getSessionAttributes();
 							attr.lastRequest = handler.name;
 							handlerInput.attributesManager.setSessionAttributes(attr);
 						}
+						resolve(val);
 					});
 				});
 			}
@@ -373,7 +403,7 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res) {
 	log(RI, "received " + r.pageInfo.totalResults + " videos");
 	var speech = "";
 	if (items[0].contentDetails.duration != "PT0S") {
-		if (r.pageInfo.totalResults != 1000000)
+		if (r.pageInfo.totalResults < 1000)
 			speech += "There are " + r.pageInfo.totalResults + " video" + (r.pageInfo.totalResults>1?"s":"") + ". ";
 		speech += "First video is: ";
 		speech += await describeVideo(items[0], res);
@@ -392,6 +422,9 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res) {
 		nextpagetoken: r.nextPageToken,
 		index: 0
 	};
+	res = res.withStandardCard("Playlist", r.pageInfo.totalResults + " videos.\n\n" + Array.from(items.slice(0, 10), function (item, i) {
+		return (i+1) + ". " + (item.snippet.title) + " [" + (item.contentDetails.duration == 'PT0S' ? "LIVE" : numericDuration(item.contentDetails.duration)) + "]";
+	}).join("\n"));
 	return res.speak(speech).reprompt('Shall I play it?');
 }
 function linkFirst(r) {
@@ -430,4 +463,7 @@ function describeVideo(video) {
 			resolve(title + ". "+(duration!=null?("It's duration: " + duration):""));
 		})
 	})
+}
+function numericDuration(duration) {
+	return duration.replace(/^PT(?:(\d+)H){0,1}(?:(\d+)M){0,1}(?:(\d+)S)/g,(m,p1,p2,p3)=>(!p1?"00":(p1.length>1?p1:"0"+p1))+":"+(!p2?"00":(p2.length>1?p2:"0"+p2))+":"+(!p3?"00":(p3.length>1?p3:"0"+p3)));
 }
