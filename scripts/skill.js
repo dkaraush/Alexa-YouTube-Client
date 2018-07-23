@@ -71,7 +71,8 @@ var requestHandlers = function (youtube) {
 		name: "AcceptIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			var data = playerData[user.userId];
-			if (!data || ["PlayLikedVideosIntent", "PlayDislikedVideosIntent", "SearchVideoIntent"].indexOf(data.from) == -1)
+			if (!data || ["PlayLikedVideosIntent", "PlayDislikedVideosIntent", "SearchVideoIntent",
+						  "SearchShortVideoIntent", "SearchLongVideoIntent", "PlayMyVideosIntent"].indexOf(data.from) == -1)
 				return res.speak("What yes?");
 
 			return await runVideo(RI, data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
@@ -122,7 +123,7 @@ var requestHandlers = function (youtube) {
 	{
 		name: "SearchShortVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
-			return await runPlaylist(RI, "SearchVideoIntent",
+			return await runPlaylist(RI, "SearchShortVideoIntent",
 								["GET", "/youtube/v3/search", {
 									type: "video",
 									part: "snippet,id",
@@ -136,7 +137,7 @@ var requestHandlers = function (youtube) {
 	{
 		name: "SearchLongVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
-			return await runPlaylist(RI, "SearchVideoIntent",
+			return await runPlaylist(RI, "SearchLongVideoIntent",
 								["GET", "/youtube/v3/search", {
 									part: "snippet,id",
 									type: "video",
@@ -144,6 +145,23 @@ var requestHandlers = function (youtube) {
 									maxResults: 50,
 									q: slots.query.value
 								}, null, RI],
+								youtube, user, res);
+		}
+	},
+	{
+		name: "PlayMyVideosIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
+			return await runPlaylist(RI, "PlayMyVideosIntent",
+								["GET", "/youtube/v3/search", {
+									part: "snippet,id",
+									type: "video",
+									maxResults: 50,
+									forMine: true
+								}, user.accessToken, RI],
 								youtube, user, res);
 		}
 	}

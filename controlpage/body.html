@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Dropbox Music Player Stats</title>
+	<title>YouTube Player Stats</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script type="text/javascript">
 		function getCookie(name) {
@@ -384,7 +384,7 @@
 					document.styleSheets[i].disabled = true;
 			}
 		}
-		setCookie("darkmode",night?"1":"0",{path:"/{STATS_URL}/"});
+		setCookie("darkmode",night?"1":"0",{path:"{STATS_URL}/"});
 	</script>
 </head>
 <body>
@@ -400,7 +400,7 @@
 					document.styleSheets[i].disabled = !night;
 			}
 			nightswitcher.className = night?"enabled":"";
-			setCookie("darkmode",night?"1":"0",{path:"/{STATS_URL}/"});
+			setCookie("darkmode",night?"1":"0",{path:"{STATS_URL}/"});
 		});
 		if (night)
 			nightswitcher.className = "enabled";
