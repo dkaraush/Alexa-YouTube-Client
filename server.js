@@ -101,7 +101,7 @@ start();
 global.exitHandler = function(options, err, code) {
 	if (typeof err !== "undefined" && err != null) {
     	console.log ((err.stack || err.message || err.getMessage || err.toString()).red);
-		controlpage.reportError("Uncaught exception", err);
+		controlpage.reportError(err);
     }
     if (options.exit) {
     	console.log("Saving...")

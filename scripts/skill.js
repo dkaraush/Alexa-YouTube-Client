@@ -338,7 +338,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		return cantalk ? err(res) : res;
 	}
 
-	if (!!data.describing && requestname != "AcceptIntent" && cantalk)
+	if (data.describing && requestname != "AcceptIntent" && cantalk)
 		res = res.speak("Playing " + (await translate(data.pitems[data.index].title)).text + "... It's duration: " + speechDuration(data.pitems[data.index].duration));
 
 	if (data.link && data.link.index == data.index && data.link.id == videoId && (Date.now() - data.link.time) < 1000*60*60) {
