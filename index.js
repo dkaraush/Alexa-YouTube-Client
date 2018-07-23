@@ -1,5 +1,19 @@
 require('colors');
+
+const project_url = "https://codeload.github.com/dkaraush/Alexa-YouTube-Client/zip/master";
 const { spawn } = require('child_process');
+const https = require("https");
+const fs = require('fs');
+const unzip = require("unzip");
+
+const dontRemove = [
+	"./.git",
+	"./master.zip",
+	"./config.json",
+	"./playingData.json",
+	"./stats/data"
+]
+
 var serverprocess;
 
 function start () {
@@ -13,17 +27,90 @@ function start () {
 			start();
 		} else if (code == 37) {
 			console.log("Updating code...".blue);
-			// TODO
+			update(start);
 		}
 
 	});
 }
+function update(cb) {
+	console.log("downloading zip from github...");
+	https.get(project_url, req => {
+		var chunks = [];
+		req.on('data', chunk => chunks.push(chunk));
+		req.on('end', async function () {
+			fs.writeFileSync("master.zip", Buffer.concat(chunks));
+			console.log("zip downloaded");
+			
+			console.log("deleting files...");
+			await removeFiles();
+			console.log("files removed.");
 
-start();
+			console.log("unzipping...");
+
+			// unzip
+			fs.createReadStream('master.zip')
+				.pipe(unzip.Parse())
+				.on('entry', function (entry) {
+					var fileName = entry.path;
+					var type = entry.type; // 'Directory' or 'File'
+					var size = entry.size;
+					fileName = fileName.substring(fileName.indexOf("/")+1);
+					if (fileName == "") {
+						entry.autodrain();
+						return;
+					}
+
+					if (!fs.existsSync(fileName) && type == 'File') {
+						entry.pipe(fs.createWriteStream(fileName));
+					} else if (!fs.existsSync(fileName) && type == 'Directory') {
+						fs.mkdirSync(fileName);
+						entry.autodrain();
+					} else 
+						entry.autodrain();
+				}).on('finish', function () {
+					fs.unlinkSync("master.zip");
+				  	console.log('unzipped');
+				  	console.log('installing npm packages');
+				  	var npm = spawn(/^win/.test(process.platform)?'npm.cmd':'npm', ["install"]);
+				  	npm.on('close', function (code) {
+				  		if (code != 0) {
+				  			console.log('something went wrong!');
+				  		} else if (cb)
+				  			cb();
+				  	})
+				});
+		});
+	});
+}
+if (process.argv.indexOf("update") >= 0) {
+	update(null);
+} else {
+	start();
+}
+
+async function removeFiles(path) {
+	if (!path) path = "./";
+	if (path == "./stats/data/" || path == "./.git/" || path == "./node_modules/")
+		return;
+
+	var files = fs.readdirSync(path);
+	for (var i = 0; i < files.length; ++i) {
+		if (dontRemove.indexOf(path + files[i]) == -1) {
+			if (fs.lstatSync(path + files[i]).isDirectory()) {
+				await removeFiles(path + files[i] + "/");
+			} else {
+				fs.unlinkSync(path + files[i]);
+			}
+		}
+	}
+	if (fs.readdirSync(path).length == 0)
+		fs.rmdirSync(path);
+	return;
+}
 
 global.exitHandler = function (options, err) {
 	if (typeof err !== 'undefined' && err != null && err != 0)
-		console.dir(err.stack);
+		console.log	(err.stack);
 	if (!serverprocess.killed) {
 		serverprocess.stdin.write("S");
 	}
