@@ -412,16 +412,31 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 	if (typeof items[0].contentDetails === "undefined") {
 		log(RI, "missing contentDetails => requesting from YouTube");
 		var dr = await youtube.request("GET", "/youtube/v3/videos", {
-			part: "contentDetails",
+			part: "id,contentDetails",
 			maxResults: 50,
 			id: Array.from(items, i => getID(i)).join(",")
 		}, null, RI);
-		if (dr.kind != "youtube#videoListResponse" || dr.items.length != items.length)  {
+		if (dr.kind != "youtube#videoListResponse")  {
 			error(RI, "we received something wrong (non-valied kind of response)", dr);
 			return err(res);
 		}
-		for (var i = 0; i < items.length; ++i)
-			items[i].contentDetails = {duration: dr.items[i].contentDetails.duration};
+		for (var i = 0; i < items.length; ++i) {
+			var found = false;
+			for (var j = 0; j < dr.items.length; ++j) {
+				if (getID(dr.items[j]) == getID(items[i])) {
+					found = true;
+					items[i].contentDetails = dr.items[j].contentDetails;
+				}
+			}
+			if (!found) {
+				items.splice(i, 1);
+				i--;
+			}
+		}
+	}
+	if (items.length == 0) {
+		log(RI, "(after contentdetails) items.length == 0  => empty playlist");
+		return res.speak("Empty.");
 	}
 	log(RI, "received " + r.pageInfo.totalResults + " videos");
 	var speech = "";
