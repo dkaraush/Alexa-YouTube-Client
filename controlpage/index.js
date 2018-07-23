@@ -211,7 +211,7 @@ var templates = {
 		"JSON": data => JSON.stringify(data, null, '\t')
 	},
 	"ERROR_TEMPLATE": {
-		array: () => errors.reverse(),
+		array: () => errors.slice().reverse(),
 		ifempty: () => "<div id='empty'>Empty :C</div>",
 		"ERROR_JSON": err => err.stack,
 		"ERROR_TIME_DIFFERENCE": err => dateDifferenceString(err.time, Date.now()),
