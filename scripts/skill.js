@@ -76,7 +76,7 @@ var requestHandlers = function (youtube) {
 						  "PlayCategoryIntent"].indexOf(data.from) == -1)
 				return res.speak("What yes?");
 
-			return await runVideo(RI, data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
+			return await runVideo(RI, "AcceptIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
 		}
 	},
 	{
@@ -88,7 +88,7 @@ var requestHandlers = function (youtube) {
 			if (!data.nearly)
 				data.index++;
 			data.nearly = false;
-			return await runVideo(RI, data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
+			return await runVideo(RI, "AMAZON.NextIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
 		}
 	},
 	{
@@ -99,7 +99,7 @@ var requestHandlers = function (youtube) {
 				return res.speak("What next?");
 			data.index++;
 			data.nearly = true;
-			return await runVideo(RI, data, false, "ENQUEUE", hasVideoApp, youtube, user, res);
+			return await runVideo(RI, "AudioPlayer.PlaybackNearlyFinished", data, false, "ENQUEUE", hasVideoApp, youtube, user, res);
 		}
 	},
 	{
@@ -271,7 +271,7 @@ var errorHandler = {
 			.reprompt('Say again.');
 	}
 }
-async function runVideo(RI, data, cantalk, behavior, type, youtube, user, res) {
+async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube, user, res) {
 	if (data.index >= data.length) {
 		log(RI, "index >= length  =>  playlist ended");
 		if (cantalk) 
@@ -319,6 +319,9 @@ async function runVideo(RI, data, cantalk, behavior, type, youtube, user, res) {
 		warn(RI, "id field in playerData is missing!", data);
 		return cantalk ? err(res) : res;
 	}
+
+	if (requestname != "AcceptIntent" && cantalk)
+		res = res.speak("Playing " + await translate(data.pitems[data.index].title) + "... It's duration: " + speechDuration(data.pitems[data.index].duration));
 
 	if (data.link && data.link.index == data.index && data.link.id == videoId && (Date.now() - data.link.time) < 1000*60*60) {
 		log(RI, "we already have a link to video => not running youtube-dl");
@@ -440,22 +443,7 @@ function describeVideo(video) {
 
 			title = title.replace(/\&/g, " and ");
 
-			var duration = null;
-			var dMatch = video.contentDetails.duration.match(/^PT(\d+H){0,1}(\d+M)(\d+S)$/);
-			if (dMatch != null && dMatch.length == 4) {
-				var mwords = {H: "hour", M: "minute", S: "second"};
-				duration = Array.from(dMatch.slice(1), d => {
-					if (typeof d === "undefined") 
-						return "";
-					var m = d[d.length-1];
-					if (m == "S") 
-						return "";
-					var n = parseInt(d.substring(0, d.length-1));
-					return n + " " + mwords[m] + (n>1?"s":"");
-				}).join(" ");
-				if (duration == "")
-					duration = "less 1 minute";
-			}
+			var duration = speechDuration(video.contentDetails.duration);		
 			if (video.contentDetails.duration == "PT0S") {
 				duration = null;
 			}
@@ -463,6 +451,25 @@ function describeVideo(video) {
 			resolve(title + ". "+(duration!=null?("It's duration: " + duration):""));
 		})
 	})
+}
+function speechDuration(duration) {
+	var dMatch = duration.match(/^PT(\d+H){0,1}(\d+M)(\d+S)$/);
+	if (dMatch != null && dMatch.length == 4) {
+		var mwords = {H: "hour", M: "minute", S: "second"};
+		var	res = Array.from(dMatch.slice(1), d => {
+			if (typeof d === "undefined") 
+				return "";
+			var m = d[d.length-1];
+			if (m == "S") 
+				return "";
+			var n = parseInt(d.substring(0, d.length-1));
+			return n + " " + mwords[m] + (n>1?"s":"");
+		}).join(" ");
+		if (res == "")
+			res = "less 1 minute";
+		return res;
+	}
+	return null;
 }
 function numericDuration(duration) {
 	return duration.replace(/^PT(?:(\d+)H){0,1}(?:(\d+)M){0,1}(?:(\d+)S)/g,(m,p1,p2,p3)=>(!p1?"00":(p1.length>1?p1:"0"+p1))+":"+(!p2?"00":(p2.length>1?p2:"0"+p2))+":"+(!p3?"00":(p3.length>1?p3:"0"+p3)));
