@@ -46,3 +46,10 @@ https://www.googleapis.com/auth/youtube.readonly
 - [✖] Alexa, ask youtube client which playlists are available
 - [✖] Alexa, ask youtube client to play Xth playlist
 - [~] Alexa, ask youtube client to play {query} streams
+
+- [✖] Alexa, ask youtube client to rate current video as liked
+- Alexa, ask youtube client to like video     
+- Alexa, ask youtube client to dislike video
+      
+- [✖] Alexa, ask youtube client to leave a comment
+- [✖] Alexa, ask youtube client to put this video into Xth playlist
