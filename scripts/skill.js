@@ -321,7 +321,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 	}
 
 	if (requestname != "AcceptIntent" && cantalk)
-		res = res.speak("Playing " + await translate(data.pitems[data.index].title) + "... It's duration: " + speechDuration(data.pitems[data.index].duration));
+		res = res.speak("Playing " + (await translate(data.pitems[data.index].title)).text + "... It's duration: " + speechDuration(data.pitems[data.index].duration));
 
 	if (data.link && data.link.index == data.index && data.link.id == videoId && (Date.now() - data.link.time) < 1000*60*60) {
 		log(RI, "we already have a link to video => not running youtube-dl");
