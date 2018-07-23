@@ -48,7 +48,7 @@ var requestHandlers = function (youtube) {
 									maxResults: 50,
 									myRating: "like"
 								}, user.accessToken],
-								youtube, user, res);
+								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
@@ -64,7 +64,7 @@ var requestHandlers = function (youtube) {
 									maxResults: 50,
 									myRating: "dislike"
 								}, user.accessToken],
-								youtube, user, res);
+								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
@@ -76,7 +76,7 @@ var requestHandlers = function (youtube) {
 						  "PlayCategoryIntent"].indexOf(data.from) == -1)
 				return res.speak("What yes?");
 
-			return await runVideo(RI, "AcceptIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
+			return await runVideo(RI, "AcceptIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
 		}
 	},
 	{
@@ -88,7 +88,7 @@ var requestHandlers = function (youtube) {
 			if (!data.nearly)
 				data.index++;
 			data.nearly = false;
-			return await runVideo(RI, "AMAZON.NextIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res);
+			return await runVideo(RI, "AMAZON.NextIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
 		}
 	},
 	{
@@ -99,7 +99,7 @@ var requestHandlers = function (youtube) {
 				return res.speak("What next?");
 			data.index++;
 			data.nearly = true;
-			return await runVideo(RI, "AudioPlayer.PlaybackNearlyFinished", data, false, "ENQUEUE", hasVideoApp, youtube, user, res);
+			return await runVideo(RI, "AudioPlayer.PlaybackNearlyFinished", data, false, "ENQUEUE", hasVideoApp, youtube, user, res, hasVideoApp);
 		}
 	},
 	{
@@ -118,7 +118,7 @@ var requestHandlers = function (youtube) {
 									maxResults: 50,
 									q: slots.query.value
 								}, null, RI],
-								youtube, user, res);
+								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
@@ -132,7 +132,7 @@ var requestHandlers = function (youtube) {
 									maxResults: 50,
 									q: slots.query.value
 								}, null, RI],
-								youtube, user, res);
+								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
@@ -146,7 +146,7 @@ var requestHandlers = function (youtube) {
 									maxResults: 50,
 									q: slots.query.value
 								}, null, RI],
-								youtube, user, res);
+								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
@@ -163,7 +163,25 @@ var requestHandlers = function (youtube) {
 									maxResults: 50,
 									forMine: true
 								}, user.accessToken, RI],
-								youtube, user, res);
+								youtube, user, res, hasVideoApp);
+		}
+	},
+	{
+		name: "DontDescribeVideoIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var data = playerData[user.userId] || {};
+			data.describing = false;
+			playerData[user.userId] = data;
+			return res.speak("Ok, I will not do that again.");
+		}
+	},
+	{
+		name: "DescribeVideoIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var data = playerData[user.userId] || {};
+			data.describing = true;
+			playerData[user.userId] = data;
+			return res.speak("Ok, I will continue doing that again.");
 		}
 	},
 	{
@@ -192,7 +210,7 @@ var requestHandlers = function (youtube) {
 									maxResults: 50,
 									videoCategoryId: categoryNum
 								}, null, RI],
-								youtube, user, res);
+								youtube, user, res, hasVideoApp);
 		}
 	}
 	];
@@ -320,7 +338,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		return cantalk ? err(res) : res;
 	}
 
-	if (requestname != "AcceptIntent" && cantalk)
+	if (!!data.describing && requestname != "AcceptIntent" && cantalk)
 		res = res.speak("Playing " + (await translate(data.pitems[data.index].title)).text + "... It's duration: " + speechDuration(data.pitems[data.index].duration));
 
 	if (data.link && data.link.index == data.index && data.link.id == videoId && (Date.now() - data.link.time) < 1000*60*60) {
@@ -329,7 +347,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		data.lastToken = videoId;	
 		if (type)
 			return res.addVideoAppLaunchDirective(data.link.value);
-		return res.addAudioPlayerPlayDirective(behavior, data.link.value, videoId, 0, waslasttoken);
+		return res.addAudioPlayerPlayDirective(behavior, data.link.value, videoId, 0, behavior == "ENQUEUE" ? waslasttoken : null);
 	}
 	return new Promise((resolve, reject) => {
 		youtubedl(videoId, type, RI)
@@ -339,7 +357,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 				data.lastToken = videoId;
 				if (type)
 					resolve(res.addVideoAppLaunchDirective(link));
-				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, 0, waslasttoken));
+				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, 0, behavior == "ENQUEUE" ? waslasttoken : null));
 			})
 			.catch(e => {
 				resolve(cantalk ? err(res) : res);
@@ -375,7 +393,7 @@ function youtubedl(id, type, RI) {
 		})
 	})
 }
-async function runPlaylist(RI, intentname, requestargs, youtube, user, res) {
+async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type) {
 	var ra = requestargs.concat([RI]);
 	var r = await youtube.request(...ra);
 
@@ -405,30 +423,37 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res) {
 	}
 	log(RI, "received " + r.pageInfo.totalResults + " videos");
 	var speech = "";
-	if (items[0].contentDetails.duration != "PT0S") {
-		if (r.pageInfo.totalResults < 1000)
-			speech += "There are " + r.pageInfo.totalResults + " video" + (r.pageInfo.totalResults>1?"s":"") + ". ";
-		speech += "First video is: ";
-		speech += await describeVideo(items[0], res);
-		speech += ". Shall I play it?";
-	} else {
-		log(RI, "first is live stream: playing it");
-		speech += "I found live stream. ";
-		speech += await describeVideo(items[0], res);
-		speech += ". Shall I play it?";
-	} 
-	playerData[user.userId] = {
+	var data = playerData[user.userId] = {
 		from: intentname,
 		req: requestargs,
 		pitems: Array.from(items, i => {return {id: i.id, title: i.snippet.title, duration: i.contentDetails.duration}}),
 		length: r.pageInfo.totalResults,
 		nextpagetoken: r.nextPageToken,
-		index: 0
+		index: 0,
+		describing: typeof data.describing === "undefined" ? true : false
 	};
+	if (data.describing) {
+		if (items[0].contentDetails.duration != "PT0S") {
+			if (r.pageInfo.totalResults < 1000)
+				speech += "There are " + r.pageInfo.totalResults + " video" + (r.pageInfo.totalResults>1?"s":"") + ". ";
+			speech += "First video is: ";
+			speech += await describeVideo(items[0]);
+			speech += ". Shall I play it?";
+		} else {
+			log(RI, "first is live stream: playing it");
+			speech += "I found live stream. ";
+			speech += await describeVideo(items[0]);
+			speech += ". Shall I play it?";
+		} 
+	}
 	res = res.withStandardCard("Playlist", r.pageInfo.totalResults + " videos.\n\n" + Array.from(items.slice(0, 10), function (item, i) {
 		return (i+1) + ". " + (item.snippet.title) + " [" + (item.contentDetails.duration == 'PT0S' ? "LIVE" : numericDuration(item.contentDetails.duration)) + "]";
 	}).join("\n"));
-	return res.speak(speech).reprompt('Shall I play it?');
+	if (data.describing)
+		return res.speak(speech).reprompt('Shall I play it?');
+	else {
+		return await runVideo(RI, intentname, data, true, "REPLACE_ALL", type, youtube, user, user, res);
+	}
 }
 function linkFirst(r) {
 	return r.speak("To use this feature you have to link your YouTube account first. Check your mobile phone.");
