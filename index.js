@@ -11,7 +11,7 @@ const dontRemove = [
 	"./master.zip",
 	"./config.json",
 	"./playingData.json",
-	"./stats/data"
+	"./controlpage/data"
 ]
 
 var serverprocess;
@@ -90,7 +90,7 @@ if (process.argv.indexOf("update") >= 0) {
 
 async function removeFiles(path) {
 	if (!path) path = "./";
-	if (path == "./stats/data/" || path == "./.git/" || path == "./node_modules/")
+	if (path == "./controlpage/data/" || path == "./.git/" || path == "./node_modules/")
 		return;
 
 	var files = fs.readdirSync(path);
