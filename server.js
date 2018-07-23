@@ -13,6 +13,7 @@ async function start() {
 	require('./scripts/utils.js');
 	global.config = loadJSONFile("config.json", {
 		port: 8034,
+		server_url: "localhost:8034",
 		youtube_api_key: null,
 		youtubedlpath: (/^win/.test(process.platform) ? 'youtube-dl.exe' : 'youtube-dl')
 	}, true);

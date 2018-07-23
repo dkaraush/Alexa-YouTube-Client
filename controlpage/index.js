@@ -132,7 +132,7 @@ var rules = {
 
 const eventsPerPage = 10;
 var fields = {
-	"STATS_URL": () => module.exports.url,
+	"STATS_URL": () => config.server_url + "/" + module.exports.url,
 	"CURRENT_USER_ID": query => query.id,
 	"CURRENT_USER_LAST_TEXT": query => dateDifferenceString(users[query.id].lastActivity, Date.now()),
 	"CURRENT_USER_LAST_DATETIME": query => datetimeString(users[query.id].lastActivity),
