@@ -423,7 +423,8 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 	}
 	log(RI, "received " + r.pageInfo.totalResults + " videos");
 	var speech = "";
-	var data = playerData[user.userId] = {
+	var data = playerData[user.userId];
+	data = playerData[user.userId] = {
 		from: intentname,
 		req: requestargs,
 		pitems: Array.from(items, i => {return {id: i.id, title: i.snippet.title, duration: i.contentDetails.duration}}),
