@@ -111,19 +111,27 @@ var requestHandlers = function (youtube) {
 	{
 		name: "SearchVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
 			return await runPlaylist(RI, "SearchVideoIntent",
 								["GET", "/youtube/v3/search", {
 									part: "snippet,id",
 									type: "video",
 									maxResults: 50,
 									q: slots.query.value
-								}, null, RI],
+								}, user.accessToken, RI],
 								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
 		name: "SearchShortVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
 			return await runPlaylist(RI, "SearchShortVideoIntent",
 								["GET", "/youtube/v3/search", {
 									type: "video",
@@ -131,13 +139,17 @@ var requestHandlers = function (youtube) {
 									videoDuration: "short",
 									maxResults: 50,
 									q: slots.query.value
-								}, null, RI],
+								}, user.accessToken, RI],
 								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
 		name: "SearchLongVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
 			return await runPlaylist(RI, "SearchLongVideoIntent",
 								["GET", "/youtube/v3/search", {
 									part: "snippet,id",
@@ -145,13 +157,17 @@ var requestHandlers = function (youtube) {
 									videoDuration: "long",
 									maxResults: 50,
 									q: slots.query.value
-								}, null, RI],
+								}, user.accessToken, RI],
 								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
 		name: "PlayMyVideosIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
 			if (!user.accessToken) {
 				log("accessToken is missing => send linkAccount card");
 				return linkFirst(res);
@@ -187,6 +203,11 @@ var requestHandlers = function (youtube) {
 	{
 		name: "PlayCategoryIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
+			
 			var categoryNum;
 			try {
 				var status = slots.category.resolutions.resolutionsPerAuthority[0].status.code;
@@ -209,7 +230,7 @@ var requestHandlers = function (youtube) {
 									type: "video",
 									maxResults: 50,
 									videoCategoryId: categoryNum
-								}, null, RI],
+								}, user.accessToken, RI],
 								youtube, user, res, hasVideoApp);
 		}
 	}
