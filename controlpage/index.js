@@ -38,7 +38,7 @@ module.exports.stopReportingRequest = function (RI, UI, res, json) {
 global.debug = function (RI) {
 	if (!events[UIs[RI]])
 		return;
-	console.log("debug ".magenta + " " + Array.from([].slice.apply(arguments).slice(1), a => typeof a === 'object' ? JSON.stringify(a) : a.toString()).join(" "));
+	console.log("debug ".magenta + " " + Array.from([].slice.apply(arguments).slice(1), a => typeof a === 'object' ? JSON.stringify(a) : a+"").join(" "));
 	events[UIs[RI]][RI].logs.push({
 		type: "debug",
 		message: Array.from([].slice.apply(arguments).slice(1), processArgument)
@@ -47,7 +47,7 @@ global.debug = function (RI) {
 global.log = function (RI) {
 	if (!events[UIs[RI]])
 		return;
-	console.log("log   ".cyan + " " + Array.from([].slice.apply(arguments).slice(1), a => typeof a === 'object' ? JSON.stringify(a) : a.toString()).join(" "));
+	console.log("log   ".cyan + " " + Array.from([].slice.apply(arguments).slice(1), a => typeof a === 'object' ? JSON.stringify(a) : a+"").join(" "));
 	events[UIs[RI]][RI].logs.push({
 		type: "log",
 		message: Array.from([].slice.apply(arguments).slice(1), processArgument)
@@ -56,7 +56,7 @@ global.log = function (RI) {
 global.warn = function (RI) {
 	if (!events[UIs[RI]])
 		return;
-	console.log("warn  ".yellow + " " + Array.from([].slice.apply(arguments).slice(1), a => typeof a === 'object' ? JSON.stringify(a) : a.toString()).join(" "));
+	console.log("warn  ".yellow + " " + Array.from([].slice.apply(arguments).slice(1), a => typeof a === 'object' ? JSON.stringify(a) : a+"").join(" "));
 	events[UIs[RI]][RI].logs.push({
 		type: "warn",
 		message: Array.from([].slice.apply(arguments).slice(1), processArgument)
@@ -65,7 +65,7 @@ global.warn = function (RI) {
 global.error = function (RI) {
 	if (!events[UIs[RI]])
 		return;
-	console.log("err   ".red + " " + Array.from([].slice.apply(arguments).slice(1), a => typeof a === 'object' ? JSON.stringify(a) : a.toString()).join(" "));
+	console.log("err   ".red + " " + Array.from([].slice.apply(arguments).slice(1), a => typeof a === 'object' ? JSON.stringify(a) : a+"").join(" "));
 	events[UIs[RI]][RI].logs.push({
 		type: "err",
 		message: Array.from([].slice.apply(arguments).slice(1), processArgument)

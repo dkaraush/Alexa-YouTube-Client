@@ -40,9 +40,16 @@ global.loadJSONFile = function (filename, defaultValue, strong) {
 		throw e;
 	}
 
-	for (var key in defaultValue)
-		if (typeof json[key] === "undefined")
+	var changed = false
+	for (var key in defaultValue) {
+		if (typeof json[key] === "undefined") {
 			json[key] = defaultValue[key];
+			changed = true;
+		}
+	}
+
+	if (changed)
+		saveJSONFile(filename, json);
 
 	return json;
 }

@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+const https = require('https');
 const {spawn} = require('child_process');
 const translate = require('google-translate-api');
 
@@ -73,8 +75,37 @@ var requestHandlers = function (youtube) {
 			var data = playerData[user.userId];
 			if (!data || ["PlayLikedVideosIntent", "PlayDislikedVideosIntent", "SearchVideoIntent",
 						  "SearchShortVideoIntent", "SearchLongVideoIntent", "PlayMyVideosIntent",
-						  "PlayCategoryIntent"].indexOf(data.from) == -1)
+						  "PlayCategoryIntent", "CommentValueIntent"].indexOf(data.from) == -1)
 				return res.speak("What yes?");
+
+			if (data.from == "CommentValueIntent") {
+				if (!data.commentValue) {
+					error(RI, "Lost comment");
+					return err(res);
+				}
+				if (!data.pitems)
+					return res.speak("No videos are playing right now");
+
+				var response = await youtube.request("POST", "/youtube/v3/commentThreads", {
+												part: "snippet",
+												alt: "json"
+											}, user.accessToken, {
+												snippet: {
+													topLevelComment: {
+														snippet: {
+															textOriginal: data.commentValue
+														}
+													},
+													videoId: data.pitems[data.index].id
+												}
+											}, RI);
+				if (!response.kind) {
+					warn(RI, "tried to leave a comment => failed");
+					warn(RI, response);
+					return err(res);
+				}
+				return res.speak("Done").withStandardCard("Comment posted.", "Posted comment on \"" + data.pitems[data.index].title + "\":\n\n"+data.commentValue);
+			}
 
 			return await runVideo(RI, "AcceptIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
 		}
@@ -217,11 +248,149 @@ var requestHandlers = function (youtube) {
 		name: "AudioPlayer.PlaybackFailed",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			var data = playerData[user.userId];
-			if (!data)
-				return res.speak("What next?");
-			data.index++;
-			data.nearly = false;
-			return await runVideo(RI, "AudioPlayer.PlaybackFailed", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
+			if (!data) return;
+			if (data.downloaded) {
+				data.index++;
+				data.nearly = false;
+				return await runVideo(RI, "AudioPlayer.PlaybackFailed", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
+			}
+
+			/*
+				Sometimes video is not downloaded by Alexa and it responds AudioPlayer.PlaybackFailed
+				The only way to fix it, server should download video itself and respond own URL to Alexa.
+			*/
+			var youtubelink = data.link.value;
+			var link = youtubelink.substring(0, youtubelink.indexOf("?"));
+			var query = youtubelink.substring(youtubelink.indexOf("?")+1);
+			data.downloaded = true;
+			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos?from=" + link + "?" + encodeURIComponent(query), data.link.id, 0, null)
+		}
+	},
+	{
+		name: "CommentRequestIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
+
+			var data = playerData[user.userId];
+			if (!data || !data.pitems || !data.pitems[data.index])
+				return res.speak("No videos are playing right now.");
+			data.from = "CommentRequestIntent";
+			return res.speak("Ok, I'm listening.");
+		}
+	},
+	{
+		name: "CommentValueIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var data = playerData[user.userId];
+			if (!data || !(data.from == "CommentRequestIntent" || data.from == "CommentRepeatIntent"))
+				return res.speak("Sorry, I did not understand. Try again").reprompt("Say again.");
+			var comment = catchAllToString(slots);
+			data.commentValue = comment;
+			data.from = "CommentValueIntent";
+
+			return res.speak("\"" + comment + "\". Is it right?");
+		}
+	},
+	{
+		name: "CommentRepeatIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var data = playerData[user.userId];
+			if (!data || !(data.from == "CommentValueIntent"))
+				return res.speak("Sorry, I did not understand. Try again").reprompt("Say again.");
+			data.from = "CommentRepeatIntent";
+			return res.speak("Ok, I'm listening.");
+		}
+	},
+	{
+		name: "LikeVideoIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
+			var data = playerData[user.userId];
+			if (!data || !data.pitems || !data.pitems[data.index] || !data.pitems[data.index].id)
+				return res.speak("No videos are playing right now.");
+
+			return new Promise((resolve, reject) => {
+				youtube.request("POST", "/youtube/v3/videos/rate", {
+					rating: 'like',
+					id: data.pitems[data.index].id
+				}, user.accessToken, RI).then((body, code) => {				
+					if (~~(code/100)==2) {
+						resolve(res.speak("Liked."));
+					} else {
+						error(RI, "wrong status code", code, body);
+						resolve(err(res));
+					}
+				}).catch(e => {
+					error(RI, "youtube request throwed error", e);
+					resolve(err(res));
+				})
+			});
+
+		}
+	},
+	{
+		name: "DislikeVideoIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
+			var data = playerData[user.userId];
+			if (!data || !data.pitems || !data.pitems[data.index] || !data.pitems[data.index].id)
+				return res.speak("No videos are playing right now.");
+
+			return new Promise((resolve, reject) => {
+				youtube.request("POST", "/youtube/v3/videos/rate", {
+					rating: 'dislike',
+					id: data.pitems[data.index].id
+				}, user.accessToken, RI).then((body, code) => {				
+					if (~~(code/100)==2) {
+						resolve(res.speak("Disliked."));
+					} else {
+						error(RI, "wrong status code", code, body);
+					}
+				}).catch(e => {
+					error(RI, "youtube request throwed error", e);
+					resolve(err(res));
+				})
+			});
+
+		}
+	},
+	{
+		name: "NoneRateVideoIntent",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (!user.accessToken) {
+				log("accessToken is missing => send linkAccount card");
+				return linkFirst(res);
+			}
+			var data = playerData[user.userId];
+			if (!data || !data.pitems || !data.pitems[data.index] || !data.pitems[data.index].id)
+				return res.speak("No videos are playing right now.");
+
+			return new Promise((resolve, reject) => {
+				youtube.request("POST", "/youtube/v3/videos/rate", {
+					rating: 'none',
+					id: data.pitems[data.index].id
+				}, user.accessToken, RI).then((body, code) => {				
+					if (body.length == 0) {
+						resolve(res.speak("Rating removed."));
+					} else {
+						error(RI, "wrong status code", code, body);
+						resolve(err(res));
+					}
+				}).catch(e => {
+					error(RI, "youtube request throwed error", e);
+					resolve(err(res));
+				})
+			});
+
 		}
 	}
 	];
@@ -288,6 +457,21 @@ var requestHandlers = function (youtube) {
 	});
 }
 
+function catchAllToString(slots) {
+	var words = [];
+	for (var i = 0; i < 100; ++i) {
+		var strSlot = i.toString().replace(/\d/g, n => "qwertyuiopasdfghjklz"[n]);
+		if (slots[strSlot].value)
+			words.push(slots[strSlot].value);
+		else break;
+	}
+	var string = words.join(" ");
+	string = string.replace(/^(\w)/g, s => s.toUpperCase());
+	string = string.replace(/(\.[ ]{0,}|\?[ ]{0,})(\w)/g, (f, s, d) => s+d.toUpperCase());
+	string = string.replace(/nt(\W|$)/g, "n't$1");
+	return string;
+}
+
 var errorHandler = {
 	canHandle() {
 		return true;
@@ -301,6 +485,7 @@ var errorHandler = {
 	}
 }
 async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube, user, res, speech) {
+	data.downloaded = false;
 	if (data.index >= data.length) {
 		log(RI, "index >= length  =>  playlist ended");
 		if (cantalk) 
@@ -314,7 +499,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		var requestargs = data.req;
 		requestargs[2].pageToken = data.nextpagetoken;
 		requestargs[requestargs.length-1] = RI;
-		var r = await youtube(...requestargs);
+		var r = await youtube.request(...requestargs);
 		r.items = r.items.filter(i => typeof getID(i) !== 'undefined');
 
 		if (['youtube#searchListResponse', 'youtube#videoListResponse'].indexOf(r.kind) < 0) {

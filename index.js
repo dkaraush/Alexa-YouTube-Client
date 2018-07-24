@@ -11,7 +11,8 @@ const dontRemove = [
 	"./master.zip",
 	"./config.json",
 	"./playerData.json",
-	"./controlpage/data"
+	"./controlpage/data",
+	"./youtube-dl.exe"
 ]
 
 var serverprocess;

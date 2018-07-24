@@ -3,7 +3,7 @@ var https = require('https');
 module.exports = function (token) {
 	return {
 		request: function (method, path, query, accesstoken, data, RI) {
-			if (typeof RI === "undefined" && method == "GET") {
+			if (arguments.length == 5) {
 				RI = data;
 				data = undefined;
 			}
@@ -42,7 +42,7 @@ module.exports = function (token) {
 						try {
 							body = JSON.parse(body);
 						} catch (e) {}
-						resolve(body, req.statusCode);
+						resolve(body);
 					})
 				});
 				if (typeof data === "object")

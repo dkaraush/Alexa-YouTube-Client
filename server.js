@@ -15,14 +15,20 @@ async function start() {
 		port: 8034,
 		server_url: "localhost:8034",
 		youtube_api_key: null,
-		youtubedlpath: (/^win/.test(process.platform) ? 'youtube-dl.exe' : 'youtube-dl')
+		youtubedlpath: (/^win/.test(process.platform) ? 'youtube-dl.exe' : 'youtube-dl'),
+		controlpage_url: "admin",
+		login: "admin",
+		password: randomString(16)
 	}, true);
+	if (config.server_url[config.server_url.length-1] == "/")
+		config.server_url = config.server_url.substring(0, config.server_url.length-1);
 	controlpage = require('./controlpage/index.js');
 	controlpage.url = config.controlpage_url || randomString(16);
 	var youtube = require('./scripts/youtube.js')(config.youtube_api_key);
 	var lambda = await require('./scripts/skill.js')(youtube);
 
 	global.playerData = loadJSONFile("playerData.json", {}, false);
+	global.videosData = loadJSONFile("videosData.json", {}, false);
 
 	var skill = null;
 
@@ -33,6 +39,43 @@ async function start() {
 			controlpage.receive(req, res, url, query);
 			return;
 		}
+		if (url == "/videos") {
+			var from = query.from;
+			if (!from) {
+				respond(res, 404, "text/html", "'from' parameter in query string is missing");
+				return;
+			}
+			if (!/^https:\/\/(.+)\.googlevideo\.com/.test(from)) {
+				respond(res, 404, "text/html", "we support only 'googlevideo.com' domain");
+				return;
+			}
+			var hostname = from.replace(/(\/videoplayback.+$|https:\/\/)/g,'');
+			var path = from.replace(/^https:\/\/.+\.googlevideo\.com/g, '');
+			https.get({
+				hostname,
+				path,
+				method: req.method,
+				headers: {
+					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
+					'DNT': 1
+				}
+			}, function (response) {
+				for (var header in response.headers) {
+					if (header == 'date') continue;
+					res.setHeader(header, response.headers[header]);
+				}
+				response.pipe(res);
+				response.on('err', () => {
+					res.statusCode = 404;
+					res.end();
+				});
+			}).on('err', () => {
+				res.statusCode = 404;
+				res.end();
+			})
+			return;
+		}
+
 		if (url != "/alexa/" || req.method != "POST") {
 			respond(res, 404, "text/html", "<p>We serve only <pre>/alexa/</pre> with POST method</p>");
 			return;
@@ -49,8 +92,8 @@ async function start() {
 			verifier(headers.signaturecertchainurl, headers.signature, data, (err) => {
 				if (err) {
 					respond(res, 400, "application/json", {status: 'failure', reason: err});
-					err(RI, 'Bad signature request.', req.connection.remoteAddress, err);
-					controlpage.stopReportingRequest(reqId, userId, res, response);
+					error(reqId, 'Bad signature request.', req.connection.remoteAddress, err);
+					controlpage.stopReportingRequest(reqId, userId, res, {status: 'failure', reason: err});
 					return;
 				}
 
@@ -92,7 +135,9 @@ async function start() {
 			throw err;
 		}
 		console.log("Server listens on :" + config.port.toString().magenta);
-		console.log("Control page is available at " + ("/"+controlpage.url).magenta)
+		console.log("Control page is available at " + ("/"+controlpage.url).magenta);
+		console.log("Login".cyan + ": " + config.login)
+		console.log("Password".cyan + ": " + config.password)
 	});
 }
 

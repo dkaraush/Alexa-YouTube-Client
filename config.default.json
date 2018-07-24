@@ -1,0 +1,11 @@
+{
+	"port": <port of http/https listening>,
+	"server_url": <full https URI, where skill will be hosted>,
+	"youtube_api_key": <youtube api key>,
+	"youtubedlpath": <how to execute youtube-dl> (optional),
+	"controlpage_url": <path, where control page will be> (optional),
+	"credentials": { (optional) <if skill will host HTTPS>
+		"key": <path to pem file of private key> (optional),
+		"cert": <path to pem file of certificate> (optional)
+	}
+}
