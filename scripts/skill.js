@@ -221,7 +221,7 @@ var requestHandlers = function (youtube) {
 				return res.speak("What next?");
 			data.index++;
 			data.nearly = false;
-			return await runVideo(RI, "AudioPlayer.PlaybackFailed", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
+			return await runVideo(RI, "AudioPlayer.PlaybackFailed", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
 		}
 	}
 	];
