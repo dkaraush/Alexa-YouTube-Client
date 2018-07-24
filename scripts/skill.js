@@ -221,7 +221,7 @@ var requestHandlers = function (youtube) {
 				return res.speak("What next?");
 			data.index++;
 			data.nearly = false;
-			return await runVideo(RI, "AudioPlayer.PlaybackFailed", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp, "Failed to play this video. ");
+			return await runVideo(RI, "AudioPlayer.PlaybackFailed", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp, "YouTube responded error. Next one...");
 		}
 	}
 	];
@@ -350,8 +350,10 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 	}
 
 	if (data.describing && requestname != "AcceptIntent" && cantalk) {
-
 		res = res.speak((speech ? speech : "") + "Playing " + (await translate(data.pitems[data.index].title)).text + "... It's duration: " + speechDuration(data.pitems[data.index].duration));
+	}
+	if (!data.describing && speech) {
+		res = res.speak(speech);
 	}
 
 	if (data.link && data.link.index == data.index && data.link.id == videoId && (Date.now() - data.link.time) < 1000*60*60) {
