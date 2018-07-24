@@ -111,27 +111,19 @@ var requestHandlers = function (youtube) {
 	{
 		name: "SearchVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
-			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
-				return linkFirst(res);
-			}
 			return await runPlaylist(RI, "SearchVideoIntent",
 								["GET", "/youtube/v3/search", {
 									part: "snippet,id",
 									type: "video",
 									maxResults: 50,
 									q: slots.query.value
-								}, user.accessToken, RI],
+								}, null, RI],
 								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
 		name: "SearchShortVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
-			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
-				return linkFirst(res);
-			}
 			return await runPlaylist(RI, "SearchShortVideoIntent",
 								["GET", "/youtube/v3/search", {
 									type: "video",
@@ -139,17 +131,13 @@ var requestHandlers = function (youtube) {
 									videoDuration: "short",
 									maxResults: 50,
 									q: slots.query.value
-								}, user.accessToken, RI],
+								}, null, RI],
 								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
 		name: "SearchLongVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
-			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
-				return linkFirst(res);
-			}
 			return await runPlaylist(RI, "SearchLongVideoIntent",
 								["GET", "/youtube/v3/search", {
 									part: "snippet,id",
@@ -157,17 +145,13 @@ var requestHandlers = function (youtube) {
 									videoDuration: "long",
 									maxResults: 50,
 									q: slots.query.value
-								}, user.accessToken, RI],
+								}, null, RI],
 								youtube, user, res, hasVideoApp);
 		}
 	},
 	{
 		name: "PlayMyVideosIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
-			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
-				return linkFirst(res);
-			}
 			if (!user.accessToken) {
 				log("accessToken is missing => send linkAccount card");
 				return linkFirst(res);
@@ -203,11 +187,6 @@ var requestHandlers = function (youtube) {
 	{
 		name: "PlayCategoryIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
-			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
-				return linkFirst(res);
-			}
-			
 			var categoryNum;
 			try {
 				var status = slots.category.resolutions.resolutionsPerAuthority[0].status.code;
@@ -230,8 +209,19 @@ var requestHandlers = function (youtube) {
 									type: "video",
 									maxResults: 50,
 									videoCategoryId: categoryNum
-								}, user.accessToken, RI],
+								}, null, RI],
 								youtube, user, res, hasVideoApp);
+		}
+	},
+	{
+		name: "AudioPlayer.PlaybackFailed",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var data = playerData[user.userId];
+			if (!data)
+				return res.speak("What next?");
+			data.index++;
+			data.nearly = false;
+			return await runVideo(RI, "AudioPlayer.PlaybackFailed", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp, "Failed to play this video. ");
 		}
 	}
 	];
@@ -310,7 +300,7 @@ var errorHandler = {
 			.reprompt('Say again.');
 	}
 }
-async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube, user, res) {
+async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube, user, res, speech) {
 	if (data.index >= data.length) {
 		log(RI, "index >= length  =>  playlist ended");
 		if (cantalk) 
@@ -359,13 +349,15 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		return cantalk ? err(res) : res;
 	}
 
-	if (data.describing && requestname != "AcceptIntent" && cantalk)
-		res = res.speak("Playing " + (await translate(data.pitems[data.index].title)).text + "... It's duration: " + speechDuration(data.pitems[data.index].duration));
+	if (data.describing && requestname != "AcceptIntent" && cantalk) {
+
+		res = res.speak((speech ? speech : "") = "Playing " + (await translate(data.pitems[data.index].title)).text + "... It's duration: " + speechDuration(data.pitems[data.index].duration));
+	}
 
 	if (data.link && data.link.index == data.index && data.link.id == videoId && (Date.now() - data.link.time) < 1000*60*60) {
 		log(RI, "we already have a link to video => not running youtube-dl");
 		var waslasttoken = data.lastToken;
-		data.lastToken = videoId;	
+		data.lastToken = videoId;
 		if (type)
 			return res.addVideoAppLaunchDirective(data.link.value);
 		return res.addAudioPlayerPlayDirective(behavior, data.link.value, videoId, 0, behavior == "ENQUEUE" ? waslasttoken : null);
