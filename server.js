@@ -36,6 +36,27 @@ async function start() {
 		var url = getURL(req);
 		var query = getQuery(req);
 		if (url.split('/').length >= 2 && url.split('/')[1] == controlpage.url) {
+			var auth = req.headers['authorization'];
+			if (!auth) {
+				res.statusCode = 401;
+				res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+				res.end();
+				return;
+			}
+			var base64 = auth.split(' ')[1];
+			var buff = new Buffer(base64, 'base64');
+			var plainauth = buff.toString();
+
+			var login = plainauth.split(':')[0];
+			var password = plainauth.split(':')[1];
+
+			if (config.login != login || config.password != password) {
+				res.statusCode = 401;
+				res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+				res.end();
+				return;
+			}
+
 			controlpage.receive(req, res, url, query);
 			return;
 		}
