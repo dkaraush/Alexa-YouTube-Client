@@ -383,7 +383,7 @@ function youtubedl(id, type, RI) {
 		var resolved = false;
 		
 		debug("[youtube-dl] getting available formats... (args: " + ["-F", "https://www.youtube.com/watch?v="+id].join(" ") + ")");
-		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", ["-f", (type ? "m4a" : "mp4"), "-g", "https://www.youtube.com/watch?v=" + id]);
+		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", ["-f", (type ? "m4a" : "mp4"), "--no-cache-dir", "-g", "https://www.youtube.com/watch?v=" + id]);
 		youtubedl.stdout.on('data', function (data) {
 			if (resolved) return;
 			if (typeof data !== "string") data = data.toString();
