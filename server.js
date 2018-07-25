@@ -66,10 +66,6 @@ async function start() {
 				respond(res, 404, "text/html", "'from' parameter in query string is missing");
 				return;
 			}
-			if (!/^https:\/\/(.+)\.googlevideo\.com/.test(from)) {
-				respond(res, 404, "text/html", "we support only 'googlevideo.com' domain");
-				return;
-			}
 
 			console.log("=> " + from);
 			console.log("<= " + decodeURIComponent(from));
