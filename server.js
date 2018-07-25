@@ -70,6 +70,9 @@ async function start() {
 				respond(res, 404, "text/html", "we support only 'googlevideo.com' domain");
 				return;
 			}
+
+			console.log("=> " + from);
+			console.log("<= " + decodeURIComponent(from));
 			https.get(decodeURIComponent(from), function (response) {
 				for (var header in response.headers) {
 					if (header == 'date') continue;
