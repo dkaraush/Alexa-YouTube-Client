@@ -263,7 +263,7 @@ var requestHandlers = function (youtube) {
 			var link = youtubelink.substring(0, youtubelink.indexOf("?"));
 			var query = youtubelink.substring(youtubelink.indexOf("?")+1);
 			data.downloaded = true;
-			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos?from=" + link + "?" + encodeURIComponent(query), data.link.id, 0, null)
+			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos?" + link + "?" + encodeURIComponent(query), data.link.id, 0, null)
 		}
 	},
 	{
