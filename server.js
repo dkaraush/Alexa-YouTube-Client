@@ -81,6 +81,7 @@ async function start() {
 					if (header == 'date') continue;
 					res.setHeader(header, response.headers[header]);
 				}
+				console.log(response.headers);
 				response.pipe(res);
 				response.on('err', () => {
 					res.statusCode = 404;
