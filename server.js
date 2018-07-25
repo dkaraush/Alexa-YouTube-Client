@@ -70,26 +70,10 @@ async function start() {
 				respond(res, 404, "text/html", "we support only 'googlevideo.com' domain");
 				return;
 			}
-			var hostname = from.replace(/(\/videoplayback.+$|https:\/\/)/g,'');
+			var start = from.replace(/\/videoplayback.+$/g,'');
 			var path = decodeURIComponent(from.replace(/^https:\/\/.+\.googlevideo\.com/g, ''));
-			console.log({
-				hostname,
-				path,
-				method: req.method,
-				headers: {
-					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
-					'DNT': 1
-				}
-			})
-			https.get({
-				hostname,
-				path,
-				method: req.method,
-				headers: {
-					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
-					'DNT': 1
-				}
-			}, function (response) {
+			console.log(start + path)
+			https.get(start + path, function (response) {
 				for (var header in response.headers) {
 					if (header == 'date') continue;
 					res.setHeader(header, response.headers[header]);
