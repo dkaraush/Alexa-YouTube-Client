@@ -72,6 +72,7 @@ async function start() {
 			}
 			var hostname = from.replace(/(\/videoplayback.+$|https:\/\/)/g,'');
 			var path = from.replace(/^https:\/\/.+\.googlevideo\.com/g, '');
+			console.log(path);
 			https.get({
 				hostname,
 				path,
