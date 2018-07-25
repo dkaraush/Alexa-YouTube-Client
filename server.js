@@ -71,8 +71,16 @@ async function start() {
 				return;
 			}
 			var hostname = from.replace(/(\/videoplayback.+$|https:\/\/)/g,'');
-			var path = from.replace(/^https:\/\/.+\.googlevideo\.com/g, '');
-			console.log(path);
+			var path = decodeURIComponent(from.replace(/^https:\/\/.+\.googlevideo\.com/g, ''));
+			console.log({
+				hostname,
+				path,
+				method: req.method,
+				headers: {
+					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
+					'DNT': 1
+				}
+			})
 			https.get({
 				hostname,
 				path,

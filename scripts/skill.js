@@ -401,7 +401,7 @@ var requestHandlers = function (youtube) {
 			var data = playerData[user.userId] || {};
 			data.offset = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds;
 			playerData[user.userId] = data.offset;
-			return res.getResponse();
+			return res.addAudioPlayerStopDirective().getResponse();
 		}
 	},
 	{
