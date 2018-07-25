@@ -70,13 +70,7 @@ async function start() {
 				respond(res, 404, "text/html", "we support only 'googlevideo.com' domain");
 				return;
 			}
-			var start = from.substring(0, from.indexOf("?"));
-			var query = decodeURIComponent(from.substring(from.indexOf("?")+1));
-			console.log("=> " + req.url);
-			console.log("START: " + start);
-			console.log("QUERY: " + query);
-			console.log("<= " + start + "?" + query);
-			https.get(start + '?' + query, function (response) {
+			https.get(decodeURIComponent(from), function (response) {
 				for (var header in response.headers) {
 					if (header == 'date') continue;
 					res.setHeader(header, response.headers[header]);

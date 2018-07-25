@@ -263,7 +263,7 @@ var requestHandlers = function (youtube) {
 			var link = youtubelink.substring(0, youtubelink.indexOf("?"));
 			var query = youtubelink.substring(youtubelink.indexOf("?")+1);
 			data.downloaded = true;
-			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos?" + link + "?" + encodeURIComponent(query), data.link.id, 0, null)
+			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos?" + encodeURIComponent(youtubelink), data.link.id, 0, null)
 		}
 	},
 	{
@@ -597,7 +597,7 @@ function youtubedl(id, type, RI) {
 		var resolved = false;
 		
 		debug("[youtube-dl] getting available formats... (args: " + ["-F", "https://www.youtube.com/watch?v="+id].join(" ") + ")");
-		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", ["-f", (type ? "m4a" : "mp4"), "--no-cache-dir", "-g", "https://www.youtube.com/watch?v=" + id]);
+		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", ["--no-cache-dir", "-f", (type ? "m4a" : "mp4"), "-g", "https://www.youtube.com/watch?v=" + id]);
 		youtubedl.stdout.on('data', function (data) {
 			if (resolved) return;
 			if (typeof data !== "string") data = data.toString();
