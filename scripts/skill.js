@@ -392,6 +392,25 @@ var requestHandlers = function (youtube) {
 			});
 
 		}
+	},
+	{
+		name: "AMAZON.PauseIntent",
+		_handle(RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			if (hasVideoApp)
+				return res.getResponse();
+			var data = playerData[user.userId] || {};
+			data.offset = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds;
+			playerData[user.userId] = data.offset;
+			return res.getResponse();
+		}
+	},
+	{
+		name: "AMAZON.ResumeIntent",
+		_handle: async function(RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var data = playerData[user.userId];
+			if (!data) return res;
+			return await runVideo(RI, "AMAZON.ResumeIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
+		}
 	}
 	];
 
@@ -541,9 +560,14 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		log(RI, "we already have a link to video => not running youtube-dl");
 		var waslasttoken = data.lastToken;
 		data.lastToken = videoId;
+		var offset = 0;
+		if (data.offset) {
+			offset = data.offset;
+			data.offset = 0;
+		}
 		if (type)
 			return res.addVideoAppLaunchDirective(data.link.value);
-		return res.addAudioPlayerPlayDirective(behavior, data.link.value, videoId, 0, behavior == "ENQUEUE" ? waslasttoken : null);
+		return res.addAudioPlayerPlayDirective(behavior, data.link.value, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null);
 	}
 	return new Promise((resolve, reject) => {
 		youtubedl(videoId, type, RI)
@@ -551,9 +575,14 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 				data.link = {id: videoId, index: data.index, value: link, time: Date.now()};
 				var waslasttoken = data.lastToken;
 				data.lastToken = videoId;
+				var offset = 0;
+				if (data.offset) {
+					offset = data.offset;
+					data.offset = 0;
+				}
 				if (type)
 					resolve(res.addVideoAppLaunchDirective(link));
-				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, 0, behavior == "ENQUEUE" ? waslasttoken : null));
+				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null));
 			})
 			.catch(e => {
 				resolve(cantalk ? err(res) : res);
