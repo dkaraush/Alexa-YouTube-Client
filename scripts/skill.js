@@ -285,9 +285,13 @@ var requestHandlers = function (youtube) {
 		name: "CommentValueIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			var data = playerData[user.userId];
-			if (!data || !(data.from == "CommentRequestIntent" || data.from == "CommentRepeatIntent"))
-				return res.speak("Sorry, I did not understand. Try again").reprompt("Say again.");
 			var comment = catchAllToString(slots);
+			if (!data || !(data.from == "CommentRequestIntent" || data.from == "CommentRepeatIntent")) {
+				log(RI, comment);
+
+
+				return res.speak("Sorry, I did not understand. Try again").reprompt("Say again.");
+			}
 			data.commentValue = comment;
 			data.from = "CommentValueIntent";
 
@@ -400,7 +404,7 @@ var requestHandlers = function (youtube) {
 				return res.getResponse();
 			var data = playerData[user.userId] || {};
 			data.offset = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds;
-			playerData[user.userId] = data.offset;
+			playerData[user.userId] = data;
 			return res.addAudioPlayerStopDirective().getResponse();
 		}
 	},
