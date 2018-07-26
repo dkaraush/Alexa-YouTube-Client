@@ -289,6 +289,7 @@ var requestHandlers = function (youtube) {
 			if (!data || !(data.from == "CommentRequestIntent" || data.from == "CommentRepeatIntent")) {
 				var command = comment.toLowerCase();
 				var words = command.split(" ");
+				debug(RI, words)
 				if (words[0] == "play" && words[1] == "videos" && words[2] == "I") {
 					if (words[3] == 'like' && words.length == 4)
 						return startHandler("PlayLikedVideosIntent", handlerInput);
