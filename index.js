@@ -12,7 +12,7 @@ const dontRemove = [
 	"./config.json",
 	"./playerData.json",
 	"./controlpage/data",
-	"./youtube-dl.exe"б
+	"./youtube-dl.exe",
 	"./youtube-dl"
 ]
 
