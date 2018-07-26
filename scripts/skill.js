@@ -337,12 +337,11 @@ var requestHandlers = function (youtube) {
 				youtube.request("POST", "/youtube/v3/videos/rate", {
 					rating: 'like',
 					id: data.pitems[data.index].id
-				}, user.accessToken, RI).then((body, code) => {				
-					if (~~(code/100)==2) {
+				}, user.accessToken, RI).then((body) => {				
+					if (body.length == 0) {
 						resolve(res.speak("Liked."));
 					} else {
-						error(RI, "wrong status code", code, body);
-						resolve(err(res));
+						error(RI, "wrong body", body);
 					}
 				}).catch(e => {
 					error(RI, "youtube request throwed error", e);
@@ -367,11 +366,11 @@ var requestHandlers = function (youtube) {
 				youtube.request("POST", "/youtube/v3/videos/rate", {
 					rating: 'dislike',
 					id: data.pitems[data.index].id
-				}, user.accessToken, RI).then((body, code) => {				
-					if (~~(code/100)==2) {
+				}, user.accessToken, RI).then((body) => {				
+					if (body.length == 0) {
 						resolve(res.speak("Disliked."));
 					} else {
-						error(RI, "wrong status code", code, body);
+						error(RI, "wrong body", body);
 					}
 				}).catch(e => {
 					error(RI, "youtube request throwed error", e);
@@ -400,7 +399,7 @@ var requestHandlers = function (youtube) {
 					if (body.length == 0) {
 						resolve(res.speak("Rating removed."));
 					} else {
-						error(RI, "wrong status code", code, body);
+						error(RI, "wrong body", body);
 						resolve(err(res));
 					}
 				}).catch(e => {
