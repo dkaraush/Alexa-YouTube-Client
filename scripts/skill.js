@@ -287,8 +287,21 @@ var requestHandlers = function (youtube) {
 			var data = playerData[user.userId];
 			var comment = catchAllToString(slots);
 			if (!data || !(data.from == "CommentRequestIntent" || data.from == "CommentRepeatIntent")) {
-				log(RI, comment);
+				var command = comment.toLowerCase();
+				var words = command.split(" ");
+				if (words[0] == "play" && words[1] == "videos" && words[2] == "I") {
+					if (words[3] == 'like' && words.length == 4)
+						return startHandler("PlayLikedVideosIntent", handlerInput);
+					if (words.slice(3).join(" ").indexOf("like") >= 0)
+						return startHandler("PlayDislikedVideosIntent", handlerInput);
+				}
 
+				if (words[0] == 'search' && words[1] == 'for') {
+					if (words[words.length-1].indexOf('video') >= 0)
+						words.splice(words.length-1, 1);
+					handlerInput.requestEnvelope.request.intent.slots.query = {value: words.slice(2)}
+					return startHandler("SearchVideoIntent", handlerInput)
+				}
 
 				return res.speak("Sorry, I did not understand. Try again").reprompt("Say again.");
 			}
@@ -413,11 +426,17 @@ var requestHandlers = function (youtube) {
 		_handle: async function(RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			var data = playerData[user.userId];
 			if (!data) return res;
-			return await runVideo(RI, "AMAZON.ResumeIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
+			return await runVideo(RI, "AMAZON.ResumeIntent", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
 		}
 	}
 	];
 
+	function startHandler(name, input) {
+		var req = reqs.find(h => h.name == name);
+		if (!req)
+			req = reqs.find(h => h.name == "AMAZON.FallbackIntent");
+		req.handle(input);
+	}
 
 	return new Promise(ret => {
 		reqs.forEachEnd(handler => {
