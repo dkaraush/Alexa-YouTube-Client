@@ -435,7 +435,7 @@ var requestHandlers = function (youtube) {
 		var req = reqs.find(h => h.name == name);
 		if (!req)
 			req = reqs.find(h => h.name == "AMAZON.FallbackIntent");
-		req.handle(input);
+		return req.handle(input);
 	}
 
 	return new Promise(ret => {
