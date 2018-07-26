@@ -290,7 +290,7 @@ var requestHandlers = function (youtube) {
 				var command = comment.toLowerCase();
 				var words = command.split(" ");
 				debug(RI, words)
-				if (words[0] == "play" && words[1] == "videos" && words[2] == "I") {
+				if (words[0] == "play" && words[1] == "videos" && words[2] == "i") {
 					if (words[3] == 'like' && words.length == 4)
 						return startHandler("PlayLikedVideosIntent", handlerInput);
 					if (words.slice(3).join(" ").indexOf("like") >= 0)
