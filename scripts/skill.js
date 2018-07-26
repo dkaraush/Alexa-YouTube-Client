@@ -300,7 +300,7 @@ var requestHandlers = function (youtube) {
 				if (words[0] == 'search' && words[1] == 'for') {
 					if (words[words.length-1].indexOf('video') >= 0)
 						words.splice(words.length-1, 1);
-					handlerInput.requestEnvelope.request.intent.slots.query = {value: words.slice(2)}
+					handlerInput.requestEnvelope.request.intent.slots.query = {value: words.slice(2).join(' ')}
 					return startHandler("SearchVideoIntent", handlerInput)
 				}
 
@@ -426,7 +426,7 @@ var requestHandlers = function (youtube) {
 		_handle: async function(RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			var data = playerData[user.userId];
 			if (!data) return res;
-			return await runVideo(RI, "AMAZON.ResumeIntent", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
+			return await runVideo(RI, "AMAZON.ResumeIntent", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res);
 		}
 	}
 	];
