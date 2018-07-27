@@ -83,9 +83,11 @@ var requestHandlers = function (youtube) {
 					error(RI, "Lost comment");
 					return err(res);
 				}
-				if (!data.pitems || !data.index || !data.pitems[data.intex] || !data)
+				if (!data.pitems || typeof data.index === "undefined" || !data.pitems[data.index] || !data)
 					return res.speak("No videos are playing right now");
 
+				var video = data.pitems[data.index]
+				var videoId = typeof video.id === 'string' ? video.id : video.id.videoId;
 				var rData = {
 								snippet: {
 									topLevelComment: {
@@ -93,7 +95,7 @@ var requestHandlers = function (youtube) {
 											textOriginal: data.commentValue
 										}
 									},
-									videoId: data.pitems[data.index].id
+									videoId: videoId
 								}
 							};
 				log(RI, "leaving a comment => data: ", rData);
