@@ -280,7 +280,7 @@ var requestHandlers = function (youtube) {
 			if (!data || !data.pitems || !data.pitems[data.index])
 				return res.speak("No videos are playing right now.");
 			data.from = "CommentRequestIntent";
-			return res.speak("Ok, I'm listening.");
+			return res.speak("Ok, I'm listening.").reprompt();
 		}
 	},
 	{
