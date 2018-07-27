@@ -309,7 +309,7 @@ var requestHandlers = function (youtube) {
 			data.commentValue = comment;
 			data.from = "CommentValueIntent";
 
-			return res.speak("\"" + comment + "\". Is it right?");
+			return res.speak("Comment text is - \"" + comment + "\". Ready to post?").reprompt("Ready to post?");
 		}
 	},
 	{
