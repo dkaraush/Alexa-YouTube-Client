@@ -83,22 +83,24 @@ var requestHandlers = function (youtube) {
 					error(RI, "Lost comment");
 					return err(res);
 				}
-				if (!data.pitems)
+				if (!data.pitems || !data.index || !data.pitems[data.intex] || !data)
 					return res.speak("No videos are playing right now");
 
+				var rData = {
+								snippet: {
+									topLevelComment: {
+										snippet: {
+											textOriginal: data.commentValue
+										}
+									},
+									videoId: data.pitems[data.index].id
+								}
+							};
+				log(RI, "leaving a comment => data: ", rData);
 				var response = await youtube.request("POST", "/youtube/v3/commentThreads", {
 												part: "snippet",
 												alt: "json"
-											}, user.accessToken, {
-												snippet: {
-													topLevelComment: {
-														snippet: {
-															textOriginal: data.commentValue
-														}
-													},
-													videoId: data.pitems[data.index].id
-												}
-											}, RI);
+											}, user.accessToken, rData, RI);
 				if (!response.kind) {
 					warn(RI, "tried to leave a comment => failed");
 					warn(RI, response);
