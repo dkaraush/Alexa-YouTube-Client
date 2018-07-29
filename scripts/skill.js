@@ -11,6 +11,7 @@ module.exports = async function (youtube) {
 		errorHandler: errorHandler
 	}
 }
+const INVOCATION_NAME = "tube player";
 var requestHandlers = function (youtube) {
 	var reqs = [{
 		name: "LaunchRequest",
@@ -22,6 +23,18 @@ var requestHandlers = function (youtube) {
 		name: "AMAZON.FallbackIntent",
 		_handle(RI, handlerInput, user, slots, res) {
 			return res.speak("Sorry, I did not understand. Say again.").reprompt("Say again");
+		}
+	},
+	{
+		name: "AMAZON.HelpIntent",
+		_handle(RI, handlerInput, user, slots, res) {
+			var speech = `This skill allows to play videos from YouTube. You can ask to play your videos, videos you have liked or disliked. You can also ask to search videos by query or category.
+For example: 
+\"Alexa, ask ${INVOCATION_NAME} to search for Mozart\"
+\"Alexa, ask ${INVOCATION_NAME} to search for Music category\"
+
+More information and categories list you can view in skill's description.`;
+			return res.speak(speech).withStandardCard("Help", speech);
 		}
 	},
 	{
@@ -726,7 +739,8 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 	}
 }
 function linkFirst(r) {
-	return r.speak("To use this feature you have to link your YouTube account first. Check your mobile phone.");
+	return r.speak("To use this feature you have to link your YouTube account first. Check your mobile phone.")
+			.withLinkAccountCard();
 }
 function err(r) { 	
 	return r.speak("Something went wrong. Try again later.");
