@@ -325,6 +325,10 @@ More information and categories' list you can view in skill's description.`;
 					return startHandler("AMAZON.HelpIntent", handlerInput);
 				}
 
+				if (words[0] == 'cancel') {
+					return startHandler("AMAZON.CancelIntent", handlerInput);
+				}
+
 				return res.speak("Sorry, I did not understand. Try again").reprompt("Say again.");
 			}
 			data.commentValue = comment;
