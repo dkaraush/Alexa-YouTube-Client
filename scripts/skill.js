@@ -564,6 +564,7 @@ var errorHandler = {
 	}
 }
 async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube, user, res, speech) {
+	type=true;
 	data.downloaded = false;
 	if (data.index >= data.length) {
 		log(RI, "index >= length  =>  playlist ended");
