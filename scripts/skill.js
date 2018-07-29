@@ -33,7 +33,7 @@ For example:
 \"Alexa, ask ${INVOCATION_NAME} to search for Mozart\"
 \"Alexa, ask ${INVOCATION_NAME} to search for Music category\"
 
-More information and categories list you can view in skill's description.`;
+More information and categories' list you can view in skill's description.`;
 			return res.speak(speech).withStandardCard("Help", speech);
 		}
 	},
@@ -448,6 +448,18 @@ More information and categories list you can view in skill's description.`;
 			var data = playerData[user.userId];
 			if (!data) return res;
 			return await runVideo(RI, "AMAZON.ResumeIntent", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res);
+		}
+	},
+	{
+		name: "AMAZON.StopIntent",
+		_handle: function (RI, handlerInput, user, slots, res, hasDisplay) {
+			return res.speak("Stopped.").addAudioPlayerStopDirective();
+		}
+	},
+	{
+		name: "AMAZON.CancelIntent",
+		_handle: function (RI, handlerInput, user, slots, res, hasDisplay) {
+			return res.speak("Cancelled.").addAudioPlayerStopDirective();
 		}
 	}
 	];
