@@ -6,23 +6,23 @@ const {spawn} = require('child_process');
 const translate = require('google-translate-api');
 
 const categories = {
-	"1": "Film & Animation",
-	"2": "Autos & Vehicles",
+	"1": "Film and Animation",
+	"2": "Autos and Vehicles",
 	"10": "Music",
-	"15": "Pets & Animals",
+	"15": "Pets and Animals",
 	"17": "Sports",
 	"18": "Short Movies",
-	"19": "Travel & Events",
+	"19": "Travel and Events",
 	"20": "Gaming",
 	"21": "Videoblogging",
-	"22": "People & Blogs",
+	"22": "People and Blogs",
 	"23": "Comedy",
 	"24": "Entertainment",
-	"25": "News & Politics",
-	"26": "Howto & Style",
+	"25": "News and Politics",
+	"26": "Howto and Style",
 	"27": "Education",
-	"28": "Science & Technology",
-	"29": "Nonprofits & Activism",
+	"28": "Science and Technology",
+	"29": "Nonprofits and Activism",
 	"30": "Movies",
 	"31": "Anime/Animation",
 	"32": "Action/Adventure",
@@ -641,7 +641,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 			}
 
 			// add new videos to playlist
-			data.pitems = data.pitems.concat(Array.from(r.items, i => {return {id: i.id, title: i.snippet.title, duration: i.contentDetails.duration}}));
+			data.pitems = data.pitems.concat(Array.from(r.items, i => {return {id: i.id, title: M(i.snippet.title), duration: i.contentDetails.duration}}));
 			data.nextpagetoken = r.nextPageToken;
 		}
 	}
@@ -768,7 +768,7 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 	data = playerData[user.userId] = {
 		from: intentname,
 		req: requestargs,
-		pitems: Array.from(items, i => {return {id: i.id, title: i.snippet.title, duration: i.contentDetails.duration}}),
+		pitems: Array.from(items, i => {return {id: i.id, title: M(i.snippet.title), duration: i.contentDetails.duration}}),
 		length: r.pageInfo.totalResults,
 		nextpagetoken: r.nextPageToken,
 		index: 0,
@@ -841,4 +841,7 @@ function speechDuration(duration) {
 }
 function numericDuration(duration) {
 	return duration.replace(/^PT(?:(\d+)H){0,1}(?:(\d+)M){0,1}(?:(\d+)S)/g,(m,p1,p2,p3)=>(!p1?"00":(p1.length>1?p1:"0"+p1))+":"+(!p2?"00":(p2.length>1?p2:"0"+p2))+":"+(!p3?"00":(p3.length>1?p3:"0"+p3)));
+}
+function M(title) {
+	return M.replace(/[<>]/g, "").replace(/\&/g, " and ");
 }
