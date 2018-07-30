@@ -13,7 +13,8 @@ const dontRemove = [
 	"./playerData.json",
 	"./controlpage/data",
 	"./youtube-dl.exe",
-	"./youtube-dl"
+	"./youtube-dl",
+	"./blacklist.json"
 ]
 
 var serverprocess;
