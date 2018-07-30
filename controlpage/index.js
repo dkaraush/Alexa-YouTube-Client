@@ -209,10 +209,10 @@ var templates = {
 				if (pd.index+1 < wasLength)
 					pd.pitems.push("...");
 			}
-			JSON.stringify(pd,null,"\t")
+			return JSON.stringify(pd,null,"\t")
 		},
 		"EVENT_PLAYERDATA_NOW": event => {
-			var pd = event.beforePlayerData;
+			var pd = event.nowPlayerData;
 			if (pd.pitems && typeof pd.index === 'number') {
 				var wasLength = pd.pitems.length;
 				pd.pitems = pd.pitems.slice(pd.index-1, 3);
@@ -221,7 +221,7 @@ var templates = {
 				if (pd.index+1 < wasLength)
 					pd.pitems.push("...");
 			}
-			JSON.stringify(pd,null,"\t")
+			return JSON.stringify(pd,null,"\t")
 		},
 		"EVENT_LOGS": event => {
 			return Array.from(event.logs, log => {
@@ -241,7 +241,7 @@ var templates = {
 				if (pd.index+1 < wasLength)
 					pd.pitems.push("...");
 			}
-			JSON.stringify(pd,null,"\t")
+			return JSON.stringify(pd,null,"\t")
 		}
 	},
 	"ERROR_TEMPLATE": {
