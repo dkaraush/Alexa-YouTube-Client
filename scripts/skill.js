@@ -291,7 +291,7 @@ More information and categories' list you can view in skill's description.`;
 				return res.speak("Category isn't found. Check skill's description for available categories.");
 			} 
 
-			var speech = "Searching for \"" + categoryName + "\" category... ";
+			var speech = "Searching for " + categoryName + " category... ";
 			return await runPlaylist(RI, "PlayCategoryIntent",
 								["GET", "/youtube/v3/search", {
 									part: "snippet,id",
