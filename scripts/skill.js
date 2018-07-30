@@ -794,6 +794,8 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 	if (data.describing)
 		return res.speak(speech).reprompt('Shall I play it?');
 	else {
+		if (beforespeech)
+			res = res.speak(beforespeech);
 		return await runVideo(RI, intentname, data, true, "REPLACE_ALL", type, youtube, user, res);
 	}
 }
@@ -843,5 +845,5 @@ function numericDuration(duration) {
 	return duration.replace(/^PT(?:(\d+)H){0,1}(?:(\d+)M){0,1}(?:(\d+)S)/g,(m,p1,p2,p3)=>(!p1?"00":(p1.length>1?p1:"0"+p1))+":"+(!p2?"00":(p2.length>1?p2:"0"+p2))+":"+(!p3?"00":(p3.length>1?p3:"0"+p3)));
 }
 function M(title) {
-	return M.replace(/[<>]/g, "").replace(/\&/g, " and ");
+	return title.replace(/[<>]/g, "").replace(/\&/g, " and ");
 }
