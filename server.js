@@ -60,18 +60,14 @@ async function start() {
 			controlpage.receive(req, res, url, query);
 			return;
 		}
-		if (url == "/videos.mp4") {
-			var from = req.url.substring(req.url.indexOf("?")+1);
-			if (!from || req.url.indexOf("?") < 0) {
-				respond(res, 404, "text/html", "query string is missing");
+		if (url.length == 21 && url.substring(url.length-4) == ".mp4") {
+			var id = url.replace(/^\/|\.mp4$/g,'');
+			var from = redirects[id];
+			if (!from) {
+				respond(res, 404, "text/html", "<p>We serve only <pre>/alexa/</pre> with POST method</p>");
 				return;
 			}
-			from = decodeURIComponent(from);
-			from = from.replace(/{hostname}/g, "googlevideo.com");
-			if (!/https:\/\/[a-zA-Z-0-9]+\.googlevideo\.com/.test(from)) {
-				respond(res, 404, "text/html", "url must be only to googlevideo.com");
-				return;
-			}
+			
 			https.get(from, function (response) {
 				res.setHeader('Content-Type', response.headers['content-type']);
 				response.pipe(res);
