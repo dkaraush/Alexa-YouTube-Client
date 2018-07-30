@@ -4,3 +4,4 @@ config.json
 youtube-dl.exe
 controlpage/data/
 videosData.json
+blacklist.json

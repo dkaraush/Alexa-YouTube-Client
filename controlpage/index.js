@@ -199,8 +199,30 @@ var templates = {
 		"EVENT_TIME_FULL": event => datetimeString(event.time),
 		"EVENT_REQUEST": event => event.req,
 		"EVENT_RESPONSE": event => event.res,
-		"EVENT_PLAYERDATA_WAS": event => JSON.stringify(event.beforePlayerData,null,"\t"),
-		"EVENT_PLAYERDATA_NOW": event => JSON.stringify(event.nowPlayerData,null,"\t"),
+		"EVENT_PLAYERDATA_WAS": event => {
+			var pd = event.beforePlayerData;
+			if (pd.pitems && typeof pd.index === 'number') {
+				var wasLength = pd.pitems.length;
+				pd.pitems = pd.pitems.slice(pd.index-1, 3);
+				if (pd.index-1 > 0)
+					pd.pitems.unshift("...");
+				if (pd.index+1 < wasLength)
+					pd.pitems.push("...");
+			}
+			JSON.stringify(pd,null,"\t")
+		},
+		"EVENT_PLAYERDATA_NOW": event => {
+			var pd = event.beforePlayerData;
+			if (pd.pitems && typeof pd.index === 'number') {
+				var wasLength = pd.pitems.length;
+				pd.pitems = pd.pitems.slice(pd.index-1, 3);
+				if (pd.index-1 > 0)
+					pd.pitems.unshift("...");
+				if (pd.index+1 < wasLength)
+					pd.pitems.push("...");
+			}
+			JSON.stringify(pd,null,"\t")
+		},
 		"EVENT_LOGS": event => {
 			return Array.from(event.logs, log => {
 				return "<span class='"+log.type+"'>"+log.type+"</span> "+Array.from(log.message, arg => "<span class='arg'>"+arg+"</span>").join(" ");
@@ -209,7 +231,18 @@ var templates = {
 	},
 	"PLAYER_DATA_TEMPLATE": {
 		array: query => playerData[query.id] ? [playerData[query.id]] : [],
-		"JSON": data => JSON.stringify(data, null, '\t')
+		"JSON": event => {
+			var pd = data;
+			if (pd.pitems && typeof pd.index === 'number') {
+				var wasLength = pd.pitems.length;
+				pd.pitems = pd.pitems.slice(pd.index-1, 3);
+				if (pd.index-1 > 0)
+					pd.pitems.unshift("...");
+				if (pd.index+1 < wasLength)
+					pd.pitems.push("...");
+			}
+			JSON.stringify(pd,null,"\t")
+		}
 	},
 	"ERROR_TEMPLATE": {
 		array: () => errors.slice().reverse(),
