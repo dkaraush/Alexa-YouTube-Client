@@ -346,6 +346,10 @@ More information and categories' list you can view in skill's description.`;
 				var command = comment.toLowerCase();
 				var words = command.split(" ");
 				debug(RI, words)
+
+				if (command.indexOf("category") > 0) {
+					return res.speak("Category isn't found. Check skill's description for available categories.");
+				}
 				if (words[0] == "play" && words[1] == "videos" && words[2] == "i") {
 					if (words[3] == 'like' && words.length == 4)
 						return startHandler("PlayLikedVideosIntent", handlerInput);
@@ -854,6 +858,7 @@ function metadata (video) {
 		}
 	if (video.thumbnail != null && video.thumbnail.url)
 		o.art = { sources: [{url: video.thumbnail.url}] }
+	return o;
 }
 function thumbnail(snippet) {
 	if (snippet.thumbnails.maxres)
