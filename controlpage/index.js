@@ -3,7 +3,7 @@
 module.exports = {};
 
 var {spawn} = require('child_process');
-var UIs = {};
+global.UIs = {};
 global.events = {};
 global.users = loadJSONFile("controlpage/data/users.json", {}, false);
 global.errors = loadJSONFile("controlpage/data/errors.json", [], false);
@@ -11,7 +11,8 @@ global.errors = loadJSONFile("controlpage/data/errors.json", [], false);
 exports.url = randomString(16);
 module.exports.startReportingRequest = function (RI, UI, reqData, req) {
 	console.log("request".magenta.bold + " " + (reqData.request.type == "IntentRequest" ? reqData.request.intent.name : reqData.request.type).blue + " " + RI.white.bold)
-	changeUserData(UI, reqData);
+	var ip = req.connection.remoteAddress == '::1' ? req.headers['x-forwarded-for'] : req.connection.remoteAddress;
+	changeUserData(UI, reqData, ip);
 	if (!events[UI]) {
 		if (!users[UI].evFilename) {
 			users[UI].evFilename = randomString(100) + ".json";
@@ -20,7 +21,7 @@ module.exports.startReportingRequest = function (RI, UI, reqData, req) {
 	}
 	var eventObj = {
 		type: reqData.request.type == "IntentRequest" ? reqData.request.intent.name : reqData.request.type,
-		ip: req.headers['x-forwarded-for'],
+		ip: ip,
 		time: Date.now(),
 		logs: [],
 		req: (req.method + " " + req.url + "\n" + headersString(req.headers) + "\n\n" + JSON.stringify(reqData,null,'\t')),
@@ -74,7 +75,7 @@ global.error = function (RI) {
 }
 
 
-function changeUserData(UI, json) {
+function changeUserData(UI, json, ip) {
 	users[UI] = {
 		lastActivity: Date.now(),
 		youtube: {
@@ -83,7 +84,8 @@ function changeUserData(UI, json) {
 		},
 		hasVideoApp: Object.keys(json.context.System.device.supportedInterfaces).indexOf('VideoApp') >= 0,
 		hasDisplay: Object.keys(json.context.System.device.supportedInterfaces).indexOf('Display') >= 0,
-		evFilename: (users[UI] && users[UI].evFilename) ? users[UI].evFilename : (randomString(100) + ".json")
+		evFilename: (users[UI] && users[UI].evFilename) ? users[UI].evFilename : (randomString(100) + ".json"),
+		ip: ip
 	}
 }
 function processArgument(arg) {
@@ -142,6 +144,13 @@ var fields = {
 	"CURRENT_USER_YOUTUBE_TOKEN": query => users[query.id].youtube.token,
 	"CURRENT_USER_HAS_DISPLAY": query => "✖✔"[users[query.id].hasDisplay+0],	
 	"CURRENT_USER_HAS_VIDEO_APP": query => "✖✔"[users[query.id].hasVideoApp+0],	
+	"CURRENT_USER_IP": query => {
+		if (users[query.id].ip)
+			return users[query.id].ip;
+		if (events[query.id].length > 0 && events[query.id][events[query.id].length-1].ip)
+			return events[query.id][events[query.id].length-1].ip;
+		return '---';
+	},
 	"EVENTS_CURRENT_PAGE": query => {
 		if (!events[query.id] && users[query.id].evFilename)
 			events[query.id] = loadJSONFile('controlpage/data/'+users[query.id].evFilename, {}, false);

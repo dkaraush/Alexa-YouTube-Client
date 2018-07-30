@@ -725,13 +725,25 @@ function getID(videoitem) {
 function youtubedl(id, type, RI) {
 	return new Promise(async function (resolve, reject) {
 		var resolved = false;
-		
-		debug("[youtube-dl] getting available formats... (args: " + ["-F", "https://www.youtube.com/watch?v="+id].join(" ") + ")");
-		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", ["--no-cache-dir", "-f", (type ? "mp4" : "m4a"), "-g", "https://www.youtube.com/watch?v=" + id]);
+		var args = ["--no-cache-dir", "-f", (type ? "mp4" : "m4a"), "-g", "https://www.youtube.com/watch?v=" + id];
+		var ip = null;
+		if (UIs[RI] && events[UIs[RI]] && events[UI[RI]][RI])
+			ip = events[UI[RI]][RI];
+		if (ip == '127.0.0.1' || ip == '::1')
+			ip = null;
+		if (ip != null) {
+			args.unshift('--http-header');
+			args.unshift('\"X-Forwarded-For='+ip+'\"');
+		}
+		debug("[youtube-dl] getting video for "+id+". (args: " + args.join(" ") + ")");
+		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", args);
 		youtubedl.stdout.on('data', function (data) {
-			if (resolved) return;
-			if (typeof data !== "string") data = data.toString();
-			if (data[data.length - 1] == '\n') data = data.substring(0, data.length - 1);
+			if (resolved)
+				return;
+			if (typeof data !== "string")
+				data = data.toString();
+			if (data[data.length - 1] == '\n')
+				data = data.substring(0, data.length - 1);
 			if (data.substring(0, "https://".length) == "https://") {
 				resolve(data);
 				resolved = true;
