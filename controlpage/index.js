@@ -2,6 +2,7 @@
 
 module.exports = {};
 
+var {spawn} = require('child_process');
 var UIs = {};
 global.events = {};
 global.users = loadJSONFile("controlpage/data/users.json", {}, false);
@@ -243,6 +244,34 @@ module.exports.receive = function (req, res, url, query) {
 		res.setHeader("Location", config.server_url + "/" + module.exports.url + "/");
 		res.end();
 		exitHandler({exit: true},null,37);
+	} else if (url == "youtubedlversion") {
+		res.statusCode = 200;
+		res.setHeader("Content-Type", "text/plain");
+		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", ["--version"]);
+		youtubedl.stdout.on('data', (data) => {
+			res.write(data);
+		});
+		youtubedl.stderr.on('data', (data) => {
+			res.write(data);
+		});
+		youtubedl.on('close', () => {
+			res.end();
+		});
+		return;
+	} else if (url == "youtubedl") {
+		res.statusCode = 200;
+		res.setHeader("Content-Type", "text/plain");
+		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", JSON.parse(query.args));
+		youtubedl.stdout.on('data', (data) => {
+			res.write(data);
+		});
+		youtubedl.stderr.on('data', (data) => {
+			res.write(data);
+		});
+		youtubedl.on('close', () => {
+			res.end();
+		});
+		return;
 	}
 
 	if (Object.keys(rules).indexOf(dirs[0]) == -1) {
