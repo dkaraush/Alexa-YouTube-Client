@@ -732,8 +732,8 @@ function youtubedl(id, type, RI) {
 		if (ip == '127.0.0.1' || ip == '::1' || ip == '::ffff:127.0.0.1')
 			ip = null;
 		if (ip != null) {
-			args.unshift('--http-header');
-			args.unshift('\"X-Forwarded-For='+ip+'\"');
+			args.unshift('X-Forwarded-For:'+ip);
+			args.unshift('--add-header');
 		}
 		debug("[youtube-dl] getting video for "+id+". (args: " + args.join(" ") + ")");
 		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", args);
