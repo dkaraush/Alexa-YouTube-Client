@@ -11,7 +11,7 @@ global.errors = loadJSONFile("controlpage/data/errors.json", [], false);
 exports.url = randomString(16);
 module.exports.startReportingRequest = function (RI, UI, reqData, req) {
 	console.log("request".magenta.bold + " " + (reqData.request.type == "IntentRequest" ? reqData.request.intent.name : reqData.request.type).blue + " " + RI.white.bold)
-	var ip = req.connection.remoteAddress == '::1' ? req.headers['x-forwarded-for'] : req.connection.remoteAddress;
+	var ip = req.connection.remoteAddress == '::1' ? req.headers['x-forwarded-for'] : req.connection.remoteAddress.replace(/^\:\:.{4}\:/g, '');
 	changeUserData(UI, reqData, ip);
 	if (!events[UI]) {
 		if (!users[UI].evFilename) {

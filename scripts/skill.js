@@ -727,9 +727,9 @@ function youtubedl(id, type, RI) {
 		var resolved = false;
 		var args = ["--no-cache-dir", "-f", (type ? "mp4" : "m4a"), "-g", "https://www.youtube.com/watch?v=" + id];
 		var ip = null;
-		if (UIs[RI] && events[UIs[RI]] && events[UI[RI]][RI])
-			ip = events[UI[RI]][RI];
-		if (ip == '127.0.0.1' || ip == '::1')
+		if (UIs[RI] && events[UIs[RI]] && events[UIs[RI]][RI])
+			ip = events[UIs[RI]][RI];
+		if (ip == '127.0.0.1' || ip == '::1' || ip == '::ffff:127.0.0.1')
 			ip = null;
 		if (ip != null) {
 			args.unshift('--http-header');
