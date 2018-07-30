@@ -60,7 +60,7 @@ async function start() {
 			controlpage.receive(req, res, url, query);
 			return;
 		}
-		if (url == "/videos") {
+		if (url == "/videos.mp4") {
 			var from = req.url.substring(req.url.indexOf("?")+1);
 			if (!from || req.url.indexOf("?") < 0) {
 				respond(res, 404, "text/html", "query string is missing");
