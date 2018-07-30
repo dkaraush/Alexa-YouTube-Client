@@ -73,10 +73,7 @@ async function start() {
 				return;
 			}
 			https.get(from, function (response) {
-				for (var header in response.headers) {
-					if (header == 'date') continue;
-					res.setHeader(header, response.headers[header]);
-				}
+				res.setHeader('Content-Type', response.headers['content-type']);
 				response.pipe(res);
 				response.on('err', () => {
 					res.statusCode = 404;
