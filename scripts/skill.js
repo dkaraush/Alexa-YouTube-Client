@@ -915,5 +915,6 @@ function thumbnail(snippet) {
 function redirectVideo(link) {
 	var id = randomString(16);
 	redirects[id] = link;
-	return config.server_url+"/"+id+".mp4";
+	return "http://techslides.com/demos/sample-videos/small.mp4";
+	//return config.server_url+"/"+id+".mp4";
 }
