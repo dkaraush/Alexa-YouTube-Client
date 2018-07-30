@@ -28,7 +28,6 @@ async function start() {
 	var lambda = await require('./scripts/skill.js')(youtube);
 
 	global.playerData = loadJSONFile("playerData.json", {}, false);
-	global.videosData = loadJSONFile("videosData.json", {}, false);
 
 	var skill = null;
 
@@ -62,19 +61,21 @@ async function start() {
 		}
 		if (url == "/videos") {
 			var from = req.url.substring(req.url.indexOf("?")+1);
-			if (!from) {
-				respond(res, 404, "text/html", "'from' parameter in query string is missing");
+			if (!from || req.url.indexOf("?") < 0) {
+				respond(res, 404, "text/html", "query string is missing");
 				return;
 			}
 
-			console.log("=> " + from);
-			console.log("<= " + decodeURIComponent(from));
-			https.get(decodeURIComponent(from), function (response) {
+			from = decodeURIComponent(from);
+			if (!/https:\/\/[a-zA-Z-0-9]+\.googlevideo\.com/.test(from)) {
+				respond(res, 404, "text/html", "url must be only to googlevideo.com");
+				return;
+			}
+			https.get(from, function (response) {
 				for (var header in response.headers) {
 					if (header == 'date') continue;
 					res.setHeader(header, response.headers[header]);
 				}
-				console.log(response.headers);
 				response.pipe(res);
 				response.on('err', () => {
 					res.statusCode = 404;

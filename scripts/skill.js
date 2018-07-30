@@ -277,8 +277,6 @@ More information and categories' list you can view in skill's description.`;
 				The only way to fix it, server should download video itself and respond own URL to Alexa.
 			*/
 			var youtubelink = data.link.value;
-			var link = youtubelink.substring(0, youtubelink.indexOf("?"));
-			var query = youtubelink.substring(youtubelink.indexOf("?")+1);
 			data.downloaded = true;
 			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos?" + encodeURIComponent(youtubelink), data.link.id, 0, null)
 		}
