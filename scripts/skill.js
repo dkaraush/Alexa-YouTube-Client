@@ -173,6 +173,17 @@ More information and categories' list you can view in skill's description.`;
 		}
 	},
 	{
+		name: "PlaybackController.NextCommandIssued",
+		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			var data = playerData[user.userId];
+			if (!data) return res;
+			if (!data.nearly)
+				data.index++;
+			data.nearly = false;
+			return await runVideo(RI, "PlaybackController.NextCommandIssued", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res);
+		}
+	},
+	{
 		name: "AudioPlayer.PlaybackNearlyFinished",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			var data = playerData[user.userId];
@@ -180,7 +191,13 @@ More information and categories' list you can view in skill's description.`;
 				return res.speak("What next?");
 			data.index++;
 			data.nearly = true;
-			return await runVideo(RI, "AudioPlayer.PlaybackNearlyFinished", data, false, "ENQUEUE", hasVideoApp, youtube, user, res, hasVideoApp);
+			return await runVideo(RI, "AudioPlayer.PlaybackNearlyFinished", data, false, "ENQUEUE", hasVideoApp, youtube, user, res);
+		}
+	},
+	{
+		name: "PlaybackController.PreviousCommandIssued",
+		_handle: async function (RI, handlerInput, user, slots, res) {
+			return res;
 		}
 	},
 	{
@@ -310,7 +327,7 @@ More information and categories' list you can view in skill's description.`;
 			if (data.downloaded) {
 				data.index++;
 				data.nearly = false;
-				return await runVideo(RI, "AudioPlayer.PlaybackFailed", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
+				return await runVideo(RI, "AudioPlayer.PlaybackFailed", data, false, "REPLACE_ALL", hasVideoApp, youtube, user, res);
 			}
 
 			/*
