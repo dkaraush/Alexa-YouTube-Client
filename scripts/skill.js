@@ -154,7 +154,7 @@ More information and categories' list you can view in skill's description.`;
 					warn(RI, response);
 					return err(res);
 				}
-				return res.speak("Done").withStandardCard("Comment posted.", "Posted comment on \"" + data.pitems[data.index].title + "\":\n\n"+data.commentValue);
+				return res.speak("Done").withStandardCard("Comment posted.", "Posted comment on \"" + video.title + "\":\n\n"+data.commentValue);
 			}
 
 			return await runVideo(RI, "AcceptIntent", data, true, "REPLACE_ALL", hasVideoApp, youtube, user, res, hasVideoApp);
@@ -319,7 +319,7 @@ More information and categories' list you can view in skill's description.`;
 			*/
 			var youtubelink = data.link.value;
 			data.downloaded = true;
-			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos?" + encodeURIComponent(youtubelink), data.link.id, 0, null)
+			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos?" + encodeURIComponent(youtubelink), data.link.id, 0, null, metadata(data.pitems[data.index]))
 		}
 	},
 	{
@@ -666,7 +666,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		}
 		if (type)
 			return res.addVideoAppLaunchDirective(data.link.value);
-		return res.addAudioPlayerPlayDirective(behavior, data.link.value, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null);
+		return res.addAudioPlayerPlayDirective(behavior, data.link.value, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index]));
 	}
 	return new Promise((resolve, reject) => {
 		youtubedl(videoId, type, RI)
@@ -681,7 +681,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 				}
 				if (type)
 					resolve(res.addVideoAppLaunchDirective(link));
-				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null));
+				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index])));
 			})
 			.catch(e => {
 				resolve(cantalk ? err(res) : res);
@@ -768,7 +768,7 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 	data = playerData[user.userId] = {
 		from: intentname,
 		req: requestargs,
-		pitems: Array.from(items, i => {return {id: i.id, title: M(i.snippet.title), duration: i.contentDetails.duration}}),
+		pitems: Array.from(items, i => {return {id: i.id, title: M(i.snippet.title), realtitle: i.snippet.title, thumbnail: thumbnail(i.snippet), duration: i.contentDetails.duration}}),
 		length: r.pageInfo.totalResults,
 		nextpagetoken: r.nextPageToken,
 		index: 0,
@@ -846,4 +846,25 @@ function numericDuration(duration) {
 }
 function M(title) {
 	return title.replace(/[<>]/g, "").replace(/\&/g, " and ");
+}
+function metadata (video) {
+	var o = {
+			title: video.realtitle,
+			subtitle: "[" + (video.duration == "PT0S" ? "LIVE" : numericDuration(video.duration)) + "]"
+		}
+	if (video.thumbnail != null && video.thumbnail.url)
+		o.art = { sources: [{url: video.thumbnail.url}] }
+}
+function thumbnail(snippet) {
+	if (snippet.thumbnails.maxres)
+		return snippet.thumbnails.maxres;
+	if (snippet.thumbnails.high)
+		return snippet.thumbnails.high;
+	if (snippet.thumbnails.standard)
+		return snippet.thumbnails.standard;
+	if (snippet.thumbnails.medium)
+		return snippet.thumbnails.medium;
+	if (snippet.thumbnails.default)
+		return snippet.thumbnails.default;
+	return null;
 }
