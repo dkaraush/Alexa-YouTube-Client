@@ -17,8 +17,19 @@
 	<div id="main_content">
 		<h1>Config</h1>
 		<pre>{CONFIG}</pre>
+		<h1>Blacklist</h1>
+		<h3>Videos, which are respond 403</h3>
+		<pre>{BLACKLIST}</pre>
+		<input type="" name="" id="addtoblacklist">
+		<div class='button' id="blacklistbtn"></div>
 		<h1>Control</h1>
 		<div class='button' href="{STATS_URL}/restart">RESTART</div>
 		<div class='button' href="{STATS_URL}/update">UPDATE</div>
 	</div>
 </div>
+<script type="text/javascript">
+	document.querySelector("#blacklistbtn").addEventListener("click", function () {
+		var bl_input = document.querySelector("#addtoblacklist");
+		window.open("{STATS_URL}/addtoblacklist?id="+bl_input.value, "_self");
+	});
+</script>

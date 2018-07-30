@@ -157,7 +157,8 @@ var fields = {
 		return Math.ceil(eventsCount / eventsPerPage);
 	},
 	"USERS_COUNT": () => Object.keys(users).length,
-	"CONFIG": () => JSON.stringify(config, null, "\t")
+	"CONFIG": () => JSON.stringify(config, null, "\t"),
+	"BLACKLIST": () => JSON.stringify(blacklist, null, "\t")
 }
 var templates = {
 	"USER_TEMPLATE": {
@@ -236,7 +237,8 @@ var templates = {
 			if (pd.pitems && typeof pd.index === 'number') {
 				var wasLength = pd.pitems.length;
 				var i = pd.index-1;
-				if (i == -1) i = 0;
+				if (i < 0)
+					i = 0;
 				pd.pitems = pd.pitems.slice(i, 3);
 				if (i > 0)
 					pd.pitems.unshift("...");
@@ -306,6 +308,12 @@ module.exports.receive = function (req, res, url, query) {
 		youtubedl.on('close', () => {
 			res.end();
 		});
+		return;
+	} else if (url == "pushtoblacklist") {
+		blacklist.push(query.id);
+		res.statusCode = 302;
+		res.setHeader("Location", config.server_url + "/" + module.exports.url + "/status/");
+		res.end();
 		return;
 	}
 
