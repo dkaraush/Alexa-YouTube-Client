@@ -339,7 +339,7 @@ More information and categories' list you can view in skill's description.`;
 			var youtubelink = data.link.value;
 			data.downloaded = true;
 			blacklist.push(data.link.id);
-			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos.mp4?" + encodeURIComponent(youtubelink), data.link.id, 0, null, metadata(data.pitems[data.index]))
+			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos.mp4?" + encodeURIComponent(youtubelink.replace(/googlevideo\.com/g, "{hostname}")), data.link.id, 0, null, metadata(data.pitems[data.index]))
 		}
 	},
 	{
@@ -690,17 +690,17 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		}
 		var link = data.link.value;
 		if (blacklist.indexOf(videoId) >= 0)
-			link = config.server_url + "/videos.mp4?" + encodeURIComponent(link);
+			link = config.server_url + "/videos.mp4?" + encodeURIComponent(link.replace(/googlevideo\.com/g, "{hostname}"));
 		
 		if (type)
-			return res.addVideoAppLaunchDirective(config.server_url + "/videos.mp4?" + encodeURIComponent(link));
+			return res.addVideoAppLaunchDirective(config.server_url + "/videos.mp4?" + encodeURIComponent(link.replace(/googlevideo\.com/g, "{hostname}")));
 		return res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index]));
 	}
 	return new Promise((resolve, reject) => {
 		youtubedl(videoId, type, RI)
 			.then(link => {
 				if (blacklist.indexOf(videoId) >= 0)
-					link = config.server_url + "/videos.mp4?" + encodeURIComponent(link);
+					link = config.server_url + "/videos.mp4?" + encodeURIComponent(link.replace(/googlevideo\.com/g, "{hostname}"));
 				data.link = {id: videoId, index: data.index, value: link, time: Date.now()};
 				var waslasttoken = data.lastToken;
 				data.lastToken = videoId;
@@ -711,7 +711,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 				}
 
 				if (type)
-					resolve(res.addVideoAppLaunchDirective(config.server_url + "/videos.mp4?" + encodeURIComponent(link)));
+					resolve(res.addVideoAppLaunchDirective(config.server_url + "/videos.mp4?" + encodeURIComponent(link.replace(/googlevideo\.com/g, "{hostname}"))));
 				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index])));
 			})
 			.catch(e => {

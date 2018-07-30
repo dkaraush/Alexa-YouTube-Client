@@ -66,7 +66,7 @@ async function start() {
 				respond(res, 404, "text/html", "query string is missing");
 				return;
 			}
-
+			from = from.replace(/{hostname}/g, "googlevideo.com");
 			from = decodeURIComponent(from);
 			if (!/https:\/\/[a-zA-Z-0-9]+\.googlevideo\.com/.test(from)) {
 				respond(res, 404, "text/html", "url must be only to googlevideo.com");
