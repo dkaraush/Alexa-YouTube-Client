@@ -322,6 +322,8 @@ More information and categories' list you can view in skill's description.`;
 	{
 		name: "AudioPlayer.PlaybackFailed",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
+			log(RI, "PlaybackFailed");
+			
 			var data = playerData[user.userId];
 			if (!data) return res;
 			if (data.downloaded) {
