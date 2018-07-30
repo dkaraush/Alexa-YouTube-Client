@@ -235,10 +235,12 @@ var templates = {
 			var pd = data;
 			if (pd.pitems && typeof pd.index === 'number') {
 				var wasLength = pd.pitems.length;
-				pd.pitems = pd.pitems.slice(pd.index-1, 3);
-				if (pd.index-1 > 0)
+				var i = pd.index-1;
+				if (i == -1) i = 0;
+				pd.pitems = pd.pitems.slice(i, 3);
+				if (i > 0)
 					pd.pitems.unshift("...");
-				if (pd.index+1 < wasLength)
+				if (i < wasLength)
 					pd.pitems.push("...");
 			}
 			return JSON.stringify(pd,null,"\t")
