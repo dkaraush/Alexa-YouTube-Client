@@ -86,7 +86,7 @@ More information and categories' list you can view in skill's description.`;
 		name: "PlayLikedVideosIntent",
 		_handle: async function(RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
+				log(RI, "accessToken is missing => send linkAccount card");
 				return linkFirst(res);
 			}
 			
@@ -103,7 +103,7 @@ More information and categories' list you can view in skill's description.`;
 		name: "PlayDislikedVideosIntent",
 		_handle: async function(RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
+				log(RI, "accessToken is missing => send linkAccount card");
 				return linkFirst(res);
 			}
 			return await runPlaylist(RI, "PlayDislikedVideosIntent",
@@ -234,7 +234,7 @@ More information and categories' list you can view in skill's description.`;
 		name: "PlayMyVideosIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
+				log(RI, "accessToken is missing => send linkAccount card");
 				return linkFirst(res);
 			}
 			return await runPlaylist(RI, "PlayMyVideosIntent",
@@ -326,7 +326,7 @@ More information and categories' list you can view in skill's description.`;
 		name: "CommentRequestIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
+				log(RI, "accessToken is missing => send linkAccount card");
 				return linkFirst(res);
 			}
 
@@ -390,7 +390,7 @@ More information and categories' list you can view in skill's description.`;
 		name: "LikeVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
+				log(RI, "accessToken is missing => send linkAccount card");
 				return linkFirst(res);
 			}
 			var data = playerData[user.userId];
@@ -419,7 +419,7 @@ More information and categories' list you can view in skill's description.`;
 		name: "DislikeVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
+				log(RI, "accessToken is missing => send linkAccount card");
 				return linkFirst(res);
 			}
 			var data = playerData[user.userId];
@@ -448,7 +448,7 @@ More information and categories' list you can view in skill's description.`;
 		name: "NoneRateVideoIntent",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			if (!user.accessToken) {
-				log("accessToken is missing => send linkAccount card");
+				log(RI, "accessToken is missing => send linkAccount card");
 				return linkFirst(res);
 			}
 			var data = playerData[user.userId];
@@ -538,7 +538,7 @@ More information and categories' list you can view in skill's description.`;
 								 handlerInput.requestEnvelope.request.intent.name == name;
 					};
 				} else {
-					console.log("Handler doesn't have its request: " + name);
+					console.log(RI, "Handler doesn't have its request: " + name);
 				}
 			});
 			handler.canHandle = function (handlerInput) {
@@ -627,7 +627,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 
 		if (r.items.length != 0) {
 			if (typeof r.items[0].contentDetails === "undefined") {
-				log("missing duration => requesting contentDetails");
+				log(RI, "missing duration => requesting contentDetails");
 				var dr = await youtube.request("GET", "/youtube/v3/videos", {
 					part: "contentDetails",
 					id: Array.from(items, i => getID(i)).join(",")
