@@ -231,7 +231,7 @@ var templates = {
 	},
 	"PLAYER_DATA_TEMPLATE": {
 		array: query => playerData[query.id] ? [playerData[query.id]] : [],
-		"JSON": event => {
+		"JSON": data => {
 			var pd = data;
 			if (pd.pitems && typeof pd.index === 'number') {
 				var wasLength = pd.pitems.length;
