@@ -306,7 +306,7 @@ More information and categories' list you can view in skill's description.`;
 		name: "AudioPlayer.PlaybackFailed",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			var data = playerData[user.userId];
-			if (!data) return;
+			if (!data) return res;
 			if (data.downloaded) {
 				data.index++;
 				data.nearly = false;
