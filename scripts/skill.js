@@ -323,7 +323,7 @@ More information and categories' list you can view in skill's description.`;
 		name: "AudioPlayer.PlaybackFailed",
 		_handle: async function (RI, handlerInput, user, slots, res, hasDisplay, hasVideoApp) {
 			log(RI, "PlaybackFailed");
-			
+
 			var data = playerData[user.userId];
 			if (!data) return res;
 			if (data.downloaded) {
@@ -338,6 +338,7 @@ More information and categories' list you can view in skill's description.`;
 			*/
 			var youtubelink = data.link.value;
 			data.downloaded = true;
+			blacklist.push(data.link.id);
 			return res.addAudioPlayerPlayDirective("REPLACE_ALL", config.server_url + "/videos?" + encodeURIComponent(youtubelink), data.link.id, 0, null, metadata(data.pitems[data.index]))
 		}
 	},
@@ -687,13 +688,19 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 			offset = data.offset;
 			data.offset = 0;
 		}
+		var link = data.link.value;
+		if (blacklist.indexOf(videoId) >= 0)
+			link = config.server_url + "/videos?" + encodeURIComponent(link);
+		
 		if (type)
-			return res.addVideoAppLaunchDirective(data.link.value);
-		return res.addAudioPlayerPlayDirective(behavior, data.link.value, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index]));
+			return res.addVideoAppLaunchDirective(link);
+		return res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index]));
 	}
 	return new Promise((resolve, reject) => {
 		youtubedl(videoId, type, RI)
 			.then(link => {
+				if (blacklist.indexOf(videoId) >= 0)
+					link = config.server_url + "/videos?" + encodeURIComponent(link);
 				data.link = {id: videoId, index: data.index, value: link, time: Date.now()};
 				var waslasttoken = data.lastToken;
 				data.lastToken = videoId;
@@ -702,6 +709,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 					offset = data.offset;
 					data.offset = 0;
 				}
+
 				if (type)
 					resolve(res.addVideoAppLaunchDirective(link));
 				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index])));

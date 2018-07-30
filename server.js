@@ -28,6 +28,7 @@ async function start() {
 	var lambda = await require('./scripts/skill.js')(youtube);
 
 	global.playerData = loadJSONFile("playerData.json", {}, false);
+	global.blacklist = loadJSONFile("blacklist.json", [], false);
 
 	var skill = null;
 
@@ -163,6 +164,7 @@ global.exitHandler = function(options, err, code) {
     if (options.exit) {
     	console.log("Saving...")
 		saveJSONFile("playerData.json", playerData);
+		saveJSONFile("blacklist.json", blacklist);
 		controlpage.save();
 		console.log("Saved.".green.bold);
 		process.exit(code ? code : 0);
