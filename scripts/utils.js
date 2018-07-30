@@ -157,3 +157,11 @@ Array.prototype.forEachEnd = function (func, cb) {
 	if (typeof cb === 'function')
 		cb();
 }
+
+global.iftry = function (func) {
+	try {
+		return func();
+	} catch (e) {
+		return false;
+	}
+}

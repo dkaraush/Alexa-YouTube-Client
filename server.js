@@ -67,7 +67,7 @@ async function start() {
 				respond(res, 404, "text/html", "<p>We serve only <pre>/alexa/</pre> with POST method</p>");
 				return;
 			}
-			
+
 			https.get(from, function (response) {
 				res.setHeader('Content-Type', response.headers['content-type']);
 				response.pipe(res);
@@ -112,6 +112,11 @@ async function start() {
 
 				skill.invoke(json)
 					.then(response => {
+						if (iftry(()=>response.response.directives.find(d=>d.type=='VideoApp.Launch') != null)) {
+							response.response.outputSpeech = null;
+							response.response.card = null;
+							response.response.reprompt = null;
+						}
 						respond(res, 200, "application/json", response);
 						controlpage.stopReportingRequest(reqId, userId, res, response);
 					})
