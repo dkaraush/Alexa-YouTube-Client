@@ -49,7 +49,7 @@ var requestHandlers = function (youtube) {
 	var reqs = [{
 		name: "LaunchRequest",
 		_handle(RI, handlerInput, user, slots, res) {
-			return res.speak("Youtube Client opened. Tell me what to play.").reprompt("Tell me what to play");	
+			return res.speak("Unofficial Youtube Player opened. Tell me what to play or ask help.").reprompt("Tell me what to play");	
 		}
 	},
 	{
