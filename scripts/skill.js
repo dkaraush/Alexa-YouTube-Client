@@ -5,6 +5,39 @@ const https = require('https');
 const {spawn} = require('child_process');
 const translate = require('google-translate-api');
 
+const categories = {
+	"1": "Film & Animation",
+	"2": "Autos & Vehicles",
+	"10": "Music",
+	"15": "Pets & Animals",
+	"17": "Sports",
+	"18": "Short Movies",
+	"19": "Travel & Events",
+	"20": "Gaming",
+	"21": "Videoblogging",
+	"22": "People & Blogs",
+	"23": "Comedy",
+	"24": "Entertainment",
+	"25": "News & Politics",
+	"26": "Howto & Style",
+	"27": "Education",
+	"28": "Science & Technology",
+	"29": "Nonprofits & Activism",
+	"30": "Movies",
+	"31": "Anime/Animation",
+	"32": "Action/Adventure",
+	"33": "Classics",
+	"35": "Documentary",
+	"36": "Drama",
+	"37": "Family",
+	"38": "Foreign",
+	"39": "Horror",
+	"40": "Sci-Fi or Fantasy",
+	"41": "Thriller",
+	"43": "Shows",
+	"44": "Trailers"
+}
+
 module.exports = async function (youtube) {
 	return {
 		requestHandlers: await requestHandlers(youtube),
@@ -245,12 +278,20 @@ More information and categories' list you can view in skill's description.`;
 				categoryNum = parseInt(slots.category.resolutions.resolutionsPerAuthority[0].values[0].value.name);
 				if (isNaN(categoryNum)) {
 					log(RI, "category number is NaN", slots.category.resolutions.resolutionsPerAuthority[0].values[0].value.name);
-					return res.speak("Parsing category error. Try again later.");
+					return res.speak("Category isn't found. Check skill's description for available categories.");
 				}
 			} catch (e) {
 				warn(RI, "catched err (bad category) ", e);
 				return res.speak("Category isn't found. Check skill's description for available categories.");
 			}
+
+			var categoryName = categories[categoryNum];
+			if (typeof categoryName === 'undefined') {
+				log(RI, "category name in categories array is missing", categoryNum, categories);
+				return res.speak("Category isn't found. Check skill's description for available categories.");
+			} 
+
+			var speech = "Searching for \"" + categoryName + "\" category... ";
 			return await runPlaylist(RI, "PlayCategoryIntent",
 								["GET", "/youtube/v3/search", {
 									part: "snippet,id",
@@ -258,7 +299,7 @@ More information and categories' list you can view in skill's description.`;
 									maxResults: 50,
 									videoCategoryId: categoryNum
 								}, null, RI],
-								youtube, user, res, hasVideoApp);
+								youtube, user, res, hasVideoApp, speech);
 		}
 	},
 	{
@@ -678,7 +719,7 @@ function youtubedl(id, type, RI) {
 		})
 	})
 }
-async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type) {
+async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type, beforespeech) {
 	var ra = requestargs.concat([RI]);
 	var r = await youtube.request(...ra);
 
@@ -722,7 +763,7 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 		return res.speak("Empty.");
 	}
 	log(RI, "received " + r.pageInfo.totalResults + " videos");
-	var speech = "";
+	var speech = beforespeech || "";
 	var data = playerData[user.userId];
 	data = playerData[user.userId] = {
 		from: intentname,
