@@ -646,7 +646,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		requestargs[2].pageToken = data.nextpagetoken;
 		requestargs[requestargs.length-1] = RI;
 		var r = await youtube.request(...requestargs);
-		r.items = r.items.filter(i => typeof getID(RI, i) !== 'undefined');
+		r.items = r.items.filter(i => typeof getID(RI, i) !== 'undefined' && blacklist.indexOf(getID(RI, i)) < 0);
 
 		if (['youtube#searchListResponse', 'youtube#videoListResponse'].indexOf(r.kind) < 0) {
 			error(RI, "we received something wrong (non-valid kind of response)", r);
