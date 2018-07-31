@@ -691,7 +691,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		var link = data.link.value;
 		if (blacklist.indexOf(videoId) >= 0)
 			link = redirectVideo(link);
-		var preservedlink = await preserveLink(link);
+		var preservedlink = await preserveLink(RI, link, videoId);
 		if (preservedlink == null) {
 			data.index++;
 			data.link = {};
@@ -718,7 +718,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 					offset = data.offset;
 					data.offset = 0;
 				}
-				var preservedlink = await preserveLink(link);
+				var preservedlink = await preserveLink(RI, link, videoId);
 				if (preservedlink == null) {
 					data.index++;
 					data.link = {};
@@ -947,25 +947,24 @@ function redirectVideo(link) {
 	redirects[id] = link;
 	return config.server_url+"/"+id+".mp4";
 }
-function preserveLink(_link) {
-	console.log("preserveLinkForVideoApp(" + _link + ")");
+function preserveLink(RI, _link, id) {
+	log(RI, "[preserveLink()] preserveLinkForVideoApp(" + _link + ")");
 	return new Promise((resolve, reject) => {
 		function req(link) {
-			console.log("requesting " + link);
-			console.log({
+			log(RI, "[preserveLink()] requesting " + link, {
 				hostname: link.replace(/^https:\/\/|\/.+$/g, ""),
 				path: link.replace(/^https:\/\/.+googlevideo\.com/g, "")
-			})
+			});
 			https.get({
 				hostname: link.replace(/^https:\/\/|\/.+$/g, ""),
 				path: link.replace(/^https:\/\/.+googlevideo\.com/g, ""),
 				family: 4
 			}, function (response) {
-				console.log("status code: " + response.statusCode);
+				log(RI, "[preserveLink()] status code: " + response.statusCode);
 				if (response.statusCode == 302) {
 					req(response.headers.location);
 				} else if (response.statusCode == 403) {
-					blacklist.push(link);
+					blacklist.push(id);
 					resolve(null);
 				} else {
 					resolve(link);
