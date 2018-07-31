@@ -72,21 +72,30 @@ async function start() {
 				respond(res, 404, "text/html", "<p>We serve only <pre>/alexa/</pre> with POST method</p>");
 				return;
 			}
-			https.get(from, function (response) {
-				console.log(response.statusCode)
-				console.log(response.headers)
+			function requestVideo(link) {
+				console.log("requesting " + link);
+				https.get(link, function (response) {
+					if (response.statusCode == 302) {
+						console.log("redirect to " + response.headers.location);
+						requestVideo(response.headers.location);
+						return;
+					}
+					console.log(response.statusCode)
+					console.log(response.headers)
 
-				res.setHeader('Content-Type', response.headers['content-type']);
-				res.setHeader('Content-Length', response.headers['content-length']);
-				response.pipe(res);
-				response.on('err', () => {
+					res.setHeader('Content-Type', response.headers['content-type']);
+					res.setHeader('Content-Length', response.headers['content-length']);
+					response.pipe(res);
+					response.on('err', () => {
+						res.statusCode = 404;
+						res.end();
+					});
+				}).on('err', () => {
 					res.statusCode = 404;
 					res.end();
-				});
-			}).on('err', () => {
-				res.statusCode = 404;
-				res.end();
-			})
+				})
+			}
+			requestVideo(from);
 			return;
 		}
 
