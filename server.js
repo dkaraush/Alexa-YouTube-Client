@@ -73,7 +73,7 @@ async function start() {
 				return;
 			}
 
-			/*https.get(from, function (response) {
+			https.get(from, function (response) {
 				res.setHeader('Content-Type', response.headers['content-type']);
 				response.pipe(res);
 				response.on('err', () => {
@@ -83,10 +83,7 @@ async function start() {
 			}).on('err', () => {
 				res.statusCode = 404;
 				res.end();
-			})*/
-			res.statusCode = 302;
-			res.setHeader("Location", from);
-			res.end();
+			})
 			return;
 		}
 
