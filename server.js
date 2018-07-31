@@ -66,8 +66,11 @@ async function start() {
 			return;
 		}
 		if (url.length == 21 && url.substring(url.length-4) == ".mp4") {
+			console.log(url)
 			var id = url.replace(/^\/|\.mp4$/g,'');
+			console.log(id)
 			var from = redirects[id];
+			console.log(from, redirects);
 			if (!from) {
 				respond(res, 404, "text/html", "<p>We serve only <pre>/alexa/</pre> with POST method</p>");
 				return;
