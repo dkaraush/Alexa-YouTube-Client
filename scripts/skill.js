@@ -4,7 +4,6 @@ const fs = require('fs');
 const https = require('https');
 const {spawn} = require('child_process');
 const translate = require('google-translate-api');
-const dns = require('dns');
 
 const categories = {
 	"1": "Film and Animation",
@@ -943,17 +942,7 @@ function preserveLinkForVideoApp(_link) {
 				if (response.statusCode == 302) {
 					req(response.headers.location);
 				} else {
-					var hostname = link.replace(/^https:\/\/|\/.+$/g, "");
-					console.log("end. getting an ip from dns (" + hostname + ")");
-					dns.lookup(hostname, {family: 4}, function (err, ip, f) {
-						console.log("dns.lookup callback (" + err + " " + ip + " " + f + ")");
-						if (err || f != 4) {
-							resolve(link);
-							return;
-						}
-						console.log('result: ' + link.replace(hostname, ip))
-						resolve(link.replace(hostname, ip));
-					})
+					resolve(link);
 				}
 			});
 		}
