@@ -72,8 +72,9 @@ async function start() {
 				respond(res, 404, "text/html", "<p>We serve only <pre>/alexa/</pre> with POST method</p>");
 				return;
 			}
-
+			console.log(id, from);
 			https.get(from, function (response) {
+				console.log(response.headers['content-length'])
 				res.setHeader('Content-Type', response.headers['content-type']);
 				res.setHeader('Content-Length', response.headers['content-length']);
 				response.pipe(res);
