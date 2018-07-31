@@ -29,6 +29,10 @@ async function start() {
 		var lambda = await require('./scripts/skill.js')(youtube);
 	} catch (e) {
 		setTimeout(function () {
+			if (controlpage)
+				controlpage.reportError(e);
+			console.log(e.stack.red);
+			console.dir(e);
 			process.exit(37);
 		}, 5000);
 	}

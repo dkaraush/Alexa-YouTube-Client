@@ -699,7 +699,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 	}
 	return new Promise((resolve, reject) => {
 		youtubedl(videoId, type, RI)
-			.then(link => {
+			.then(async function (link) {
 				if (blacklist.indexOf(videoId) >= 0)
 					link = redirectVideo(link);
 				data.link = {id: videoId, index: data.index, value: link, time: Date.now()};
