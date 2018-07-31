@@ -4,6 +4,7 @@ const fs = require('fs');
 const https = require('https');
 const {spawn} = require('child_process');
 const translate = require('google-translate-api');
+const dns = require('dns');
 
 const categories = {
 	"1": "Film and Animation",
@@ -693,7 +694,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 			link = redirectVideo(link);
 		
 		if (type)
-			return res.addVideoAppLaunchDirective(redirectVideo(link));
+			return res.addVideoAppLaunchDirective(await preserveLinkForVideoApp(link));
 		return res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index]));
 	}
 	return new Promise((resolve, reject) => {
@@ -711,7 +712,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 				}
 
 				if (type)
-					resolve(res.addVideoAppLaunchDirective(redirectVideo(link)));
+					resolve(res.addVideoAppLaunchDirective(await preserveLinkForVideoApp(link)));
 				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index])));
 			})
 			.catch(e => {
@@ -922,4 +923,31 @@ function redirectVideo(link) {
 	redirects[id] = link;
 	//return "https://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
 	return config.server_url+"/"+id+".mp4";
+}
+function preserveLinkForVideoApp(_link) {
+	return new Promise((resolve, reject) => {
+		function req(link) {
+			https.request({
+				hostname: link.replace(/^https:\/\/|\/.+$/g, ""),
+				path: link.replace(/^https:\/\/.+googlevideo\.com/g, ""),
+				family: 4
+			}, function (response) {
+				if (response.statusCode == 302) {
+					req(response.headers.location);
+					return;
+				} else {
+					var hostname = link.replace(/^https:\/\/|\/.+$/g, "");
+					dns.lookup(hostname, {family: 4}, function (err, ip, f) {
+						if (f != 4) {
+							resolve(link);
+							return;
+						}
+
+						resolve(link.replace(hostname, ip));
+					})
+				}
+			});
+		}
+		req(_link);
+	});
 }

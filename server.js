@@ -73,8 +73,12 @@ async function start() {
 				return;
 			}
 			function requestVideo(link) {
-				console.log("requesting " + link);
-				https.get(link, function (response) {
+				console.log('requesting ' + link);
+				https.get({
+					hostname: link.replace(/^https:\/\/|\/.+$/g, ""),
+					path: link.replace(/^https:\/\/.+googlevideo\.com/g, ""),
+					family: 4
+				}, function (response) {
 					if (response.statusCode == 302) {
 						console.log("redirect to " + response.headers.location);
 						requestVideo(response.headers.location);
