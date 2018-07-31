@@ -691,10 +691,19 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		var link = data.link.value;
 		if (blacklist.indexOf(videoId) >= 0)
 			link = redirectVideo(link);
-		
+		var preservedlink = await preserveLink(link);
+		if (preservedlink == null) {
+			data.index++;
+			data.link = {};
+			data.downloaded = false;
+			data.nearly = false;
+			warn(RI, "403 error: playing next video");
+			return runVideo(RI, requestname, data, false, behavior, type, youtube, user, res);
+		}
+
 		if (type)
-			return res.addVideoAppLaunchDirective(await preserveLinkForVideoApp(link));
-		return res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index]));
+			return res.addVideoAppLaunchDirective(preservedlink);
+		return res.addAudioPlayerPlayDirective(behavior, preservedlink, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index]));
 	}
 	return new Promise((resolve, reject) => {
 		youtubedl(videoId, type, RI)
@@ -709,10 +718,20 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 					offset = data.offset;
 					data.offset = 0;
 				}
+				var preservedlink = await preserveLink(link);
+				if (preservedlink == null) {
+					data.index++;
+					data.link = {};
+					data.downloaded = false;
+					data.nearly = false;
+					warn(RI, "403 error: playing next video");
+					resolve(runVideo(RI, requestname, data, false, behavior, type, youtube, user, res));
+					return;
+				}
 
 				if (type)
-					resolve(res.addVideoAppLaunchDirective(await preserveLinkForVideoApp(link)));
-				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index])));
+					resolve(res.addVideoAppLaunchDirective(preservedlink));
+				else resolve(res.addAudioPlayerPlayDirective(behavior, preservedlink, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index])));
 			})
 			.catch(e => {
 				resolve(cantalk ? err(res) : res);
@@ -780,6 +799,12 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 	if (items.length == 0) {
 		log(RI, "items.length == 0  => empty playlist");
 		return res.speak("Empty.");
+	}
+	// filter items
+	items = items.filter(i => blacklist.indexOf(getID(RI, i)) < 0);
+	if (items.length == 0) {
+		log(RI, "after filtering items (blacklist), it becomes empty");
+		return res.speak("Sorry, we apologise, but we can't run this right now. Please, request something another.");
 	}
 	if (typeof items[0].contentDetails === "undefined") {
 		log(RI, "missing contentDetails => requesting from YouTube");
@@ -920,18 +945,16 @@ function thumbnail(snippet) {
 function redirectVideo(link) {
 	var id = randomString(16);
 	redirects[id] = link;
-	//return "https://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4";
 	return config.server_url+"/"+id+".mp4";
 }
-function preserveLinkForVideoApp(_link) {
+function preserveLink(_link) {
 	console.log("preserveLinkForVideoApp(" + _link + ")");
 	return new Promise((resolve, reject) => {
 		function req(link) {
 			console.log("requesting " + link);
 			console.log({
 				hostname: link.replace(/^https:\/\/|\/.+$/g, ""),
-				path: link.replace(/^https:\/\/.+googlevideo\.com/g, ""),
-				family: 4
+				path: link.replace(/^https:\/\/.+googlevideo\.com/g, "")
 			})
 			https.get({
 				hostname: link.replace(/^https:\/\/|\/.+$/g, ""),
@@ -941,6 +964,9 @@ function preserveLinkForVideoApp(_link) {
 				console.log("status code: " + response.statusCode);
 				if (response.statusCode == 302) {
 					req(response.headers.location);
+				} else if (response.statusCode == 403) {
+					blacklist.push(link);
+					resolve(null);
 				} else {
 					resolve(link);
 				}
