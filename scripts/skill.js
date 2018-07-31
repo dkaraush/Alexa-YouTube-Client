@@ -693,7 +693,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 			link = redirectVideo(link);
 		
 		if (type)
-			return res.addVideoAppLaunchDirective(link);
+			return res.addVideoAppLaunchDirective(redirectVideo(link));
 		return res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index]));
 	}
 	return new Promise((resolve, reject) => {
@@ -711,7 +711,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 				}
 
 				if (type)
-					resolve(res.addVideoAppLaunchDirective(link));
+					resolve(res.addVideoAppLaunchDirective(redirectVideo(link));
 				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index])));
 			})
 			.catch(e => {
