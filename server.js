@@ -10,23 +10,28 @@ var verifier = require('alexa-verifier');
 var controlpage;
 
 async function start() {
-	require('./scripts/utils.js');
-	global.config = loadJSONFile("config.json", {
-		port: 8034,
-		server_url: "localhost:8034",
-		youtube_api_key: null,
-		youtubedlpath: (/^win/.test(process.platform) ? 'youtube-dl.exe' : 'youtube-dl'),
-		controlpage_url: "admin",
-		login: "admin",
-		password: randomString(16)
-	}, true);
-	if (config.server_url[config.server_url.length-1] == "/")
-		config.server_url = config.server_url.substring(0, config.server_url.length-1);
-	controlpage = require('./controlpage/index.js');
-	controlpage.url = config.controlpage_url || randomString(16);
-	var youtube = require('./scripts/youtube.js')(config.youtube_api_key);
-	var lambda = await require('./scripts/skill.js')(youtube);
-
+	try {
+		require('./scripts/utils.js');
+		global.config = loadJSONFile("config.json", {
+			port: 8034,
+			server_url: "localhost:8034",
+			youtube_api_key: null,
+			youtubedlpath: (/^win/.test(process.platform) ? 'youtube-dl.exe' : 'youtube-dl'),
+			controlpage_url: "admin",
+			login: "admin",
+			password: randomString(16)
+		}, true);
+		if (config.server_url[config.server_url.length-1] == "/")
+			config.server_url = config.server_url.substring(0, config.server_url.length-1);
+		controlpage = require('./controlpage/index.js');
+		controlpage.url = config.controlpage_url || randomString(16);
+		var youtube = require('./scripts/youtube.js')(config.youtube_api_key);
+		var lambda = await require('./scripts/skill.js')(youtube);
+	} catch (e) {
+		setTimeout(function () {
+			process.exit(37);
+		}, 5000);
+	}
 	global.playerData = loadJSONFile("playerData.json", {}, false);
 	global.blacklist = loadJSONFile("blacklist.json", [], false);
 
@@ -172,7 +177,6 @@ global.exitHandler = function(options, err, code) {
 	}
 }
 process.stdin.on('data', exitHandler.bind(null, {exit: true}))
-
 process.on('SIGINT', exitHandler.bind(null, {exit:true}));
 process.on('SIGTERM', exitHandler.bind(null, {exit:true}));
 process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
