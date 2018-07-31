@@ -393,7 +393,7 @@ More information and categories' list you can view in skill's description.`;
 				}
 
 				if (words[0] == 'next') {
-					return startHandler("AMAZON.NextIntent", handerInput);
+					return startHandler("AMAZON.NextIntent", handlerInput);
 				}
 
 				return res.speak("Sorry, I did not understand. Try again").reprompt("Say again.");
