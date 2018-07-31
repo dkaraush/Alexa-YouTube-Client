@@ -664,7 +664,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 					error(RI, "we received something wrong (non-valied kind of response)", r);
 					return err(res);
 				}
-				for (var i = 0; i < items.length; ++i)
+				for (var i = 0; i < r.items.length; ++i)
 					r.items[i].contentDetails = {duration: dr.items[i].contentDetails.duration};
 			}
 
