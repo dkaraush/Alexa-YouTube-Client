@@ -658,7 +658,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 				log(RI, "missing duration => requesting contentDetails");
 				var dr = await youtube.request("GET", "/youtube/v3/videos", {
 					part: "contentDetails",
-					id: Array.from(items, i => getID(RI, i)).join(",")
+					id: Array.from(r.items, i => getID(RI, i)).join(",")
 				}, user.accessToken, RI);
 				if (dr.kind != "youtube#videoListResponse" || dr.items.length != r.items.length)  {
 					error(RI, "we received something wrong (non-valied kind of response)", r);
