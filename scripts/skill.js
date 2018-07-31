@@ -392,7 +392,7 @@ More information and categories' list you can view in skill's description.`;
 					return startHandler("AMAZON.CancelIntent", handlerInput);
 				}
 
-				if (words[0] == 'next') {
+				if (words.indexOf('next') >= 0) {
 					return startHandler("AMAZON.NextIntent", handlerInput);
 				}
 
