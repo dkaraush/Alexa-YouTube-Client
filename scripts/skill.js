@@ -637,7 +637,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 			playlist.forEachEnd((video, cb) => {
 				youtubedl(getID(RI, video), type, RI)
 					.then(async function(link) {
-						var plink = await preserveLink(link);
+						var plink = await preserveLink(RI, link, getID(RI, video));
 						if (plink == null) {
 							cb();
 							return;
