@@ -947,7 +947,7 @@ function redirectVideo(link) {
 	redirects[id] = link;
 	return config.server_url+"/"+id+".mp4";
 }
-function preserveLink(RI, _link, id) {
+function preserveLink(RI, _link, id) {return redirectVideo(_link);
 	log(RI, "[preserveLink()] preserveLinkForVideoApp(" + _link + ")");
 	return new Promise((resolve, reject) => {
 		function req(link) {
