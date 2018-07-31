@@ -925,24 +925,33 @@ function redirectVideo(link) {
 	return config.server_url+"/"+id+".mp4";
 }
 function preserveLinkForVideoApp(_link) {
+	console.log("preserveLinkForVideoApp(" + _link + ")");
 	return new Promise((resolve, reject) => {
 		function req(link) {
+			console.log("requesting " + link);
+			console.log({
+				hostname: link.replace(/^https:\/\/|\/.+$/g, ""),
+				path: link.replace(/^https:\/\/.+googlevideo\.com/g, ""),
+				family: 4
+			})
 			https.request({
 				hostname: link.replace(/^https:\/\/|\/.+$/g, ""),
 				path: link.replace(/^https:\/\/.+googlevideo\.com/g, ""),
 				family: 4
 			}, function (response) {
+				console.log("status code: " + response.statusCode);
 				if (response.statusCode == 302) {
 					req(response.headers.location);
-					return;
 				} else {
 					var hostname = link.replace(/^https:\/\/|\/.+$/g, "");
+					console.log("end. getting an ip from dns (" + hostname + ")");
 					dns.lookup(hostname, {family: 4}, function (err, ip, f) {
-						if (f != 4) {
+						console.log("dns.lookup callback (" + err + " " + ip + " " + f + ")");
+						if (err || f != 4) {
 							resolve(link);
 							return;
 						}
-
+						console.log('result: ' + link.replace(hostname, ip))
 						resolve(link.replace(hostname, ip));
 					})
 				}
