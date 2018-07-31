@@ -642,7 +642,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		requestargs[2].pageToken = data.nextpagetoken;
 		requestargs[requestargs.length-1] = RI;
 		var r = await youtube.request(...requestargs);
-		r.items = r.items.filter(i => typeof getID(i) !== 'undefined');
+		r.items = r.items.filter(i => typeof getID(RI, i) !== 'undefined');
 
 		if (['youtube#searchListResponse', 'youtube#videoListResponse'].indexOf(r.kind) < 0) {
 			error(RI, "we received something wrong (non-valid kind of response)", r);
@@ -654,7 +654,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 				log(RI, "missing duration => requesting contentDetails");
 				var dr = await youtube.request("GET", "/youtube/v3/videos", {
 					part: "contentDetails",
-					id: Array.from(items, i => getID(i)).join(",")
+					id: Array.from(items, i => getID(RI, i)).join(",")
 				}, user.accessToken, RI);
 				if (dr.kind != "youtube#videoListResponse" || dr.items.length != r.items.length)  {
 					error(RI, "we received something wrong (non-valied kind of response)", r);
@@ -670,7 +670,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		}
 	}
 
-	var videoId = getID(data.pitems[data.index]);
+	var videoId = getID(RI, data.pitems[data.index]);
 	if (!videoId) {
 		warn(RI, "id field in playerData is missing!", data);
 		return cantalk ? err(res) : res;
@@ -719,7 +719,12 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 			})
 	});
 }
-function getID(videoitem) {
+function getID(RI, videoitem) {
+	if (typeof videoitem.id === 'undefined') {
+		// WTF
+		warn(RI, "[getID()] videoitem hasn't id", videoitem);
+		return undefined;
+	}
 	return typeof videoitem.id === "string" ? videoitem.id : videoitem.id.videoId;
 }
 function youtubedl(id, type, RI) {
@@ -771,7 +776,7 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 		return err(res);
 	}
 
-	var items = r.items.filter(i => typeof getID(i) !== "undefined");
+	var items = r.items.filter(i => typeof getID(RI, i) !== "undefined");
 	if (items.length == 0) {
 		log(RI, "items.length == 0  => empty playlist");
 		return res.speak("Empty.");
@@ -781,7 +786,7 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 		var dr = await youtube.request("GET", "/youtube/v3/videos", {
 			part: "id,contentDetails",
 			maxResults: 50,
-			id: Array.from(items, i => getID(i)).join(",")
+			id: Array.from(items, i => getID(RI, i)).join(",")
 		}, null, RI);
 		if (dr.kind != "youtube#videoListResponse")  {
 			error(RI, "we received something wrong (non-valied kind of response)", dr);
@@ -790,7 +795,7 @@ async function runPlaylist(RI, intentname, requestargs, youtube, user, res, type
 		for (var i = 0; i < items.length; ++i) {
 			var found = false;
 			for (var j = 0; j < dr.items.length; ++j) {
-				if (getID(dr.items[j]) == getID(items[i])) {
+				if (getID(RI, dr.items[j]) == getID(RI, items[i])) {
 					found = true;
 					items[i].contentDetails = dr.items[j].contentDetails;
 				}
