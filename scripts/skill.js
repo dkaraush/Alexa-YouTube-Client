@@ -711,7 +711,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 				}
 
 				if (type)
-					resolve(res.addVideoAppLaunchDirective(redirectVideo(link));
+					resolve(res.addVideoAppLaunchDirective(redirectVideo(link)));
 				else resolve(res.addAudioPlayerPlayDirective(behavior, link, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index])));
 			})
 			.catch(e => {
