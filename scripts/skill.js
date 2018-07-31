@@ -934,7 +934,7 @@ function preserveLinkForVideoApp(_link) {
 				path: link.replace(/^https:\/\/.+googlevideo\.com/g, ""),
 				family: 4
 			})
-			https.request({
+			https.get({
 				hostname: link.replace(/^https:\/\/|\/.+$/g, ""),
 				path: link.replace(/^https:\/\/.+googlevideo\.com/g, ""),
 				family: 4
