@@ -75,6 +75,7 @@ async function start() {
 
 			https.get(from, function (response) {
 				res.setHeader('Content-Type', response.headers['content-type']);
+				res.setHeader('Content-Length', response.headers['content-length']);
 				response.pipe(res);
 				response.on('err', () => {
 					res.statusCode = 404;
