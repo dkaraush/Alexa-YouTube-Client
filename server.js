@@ -70,6 +70,7 @@ async function start() {
 			return;
 		}
 		if (url.length == 21 && url.substring(url.length-4) == ".mp4") {
+			console.log("red " + url)
 			var id = url.replace(/^\/|\.mp4$/g,'');
 			var from = redirects[id];
 			if (!from) {
