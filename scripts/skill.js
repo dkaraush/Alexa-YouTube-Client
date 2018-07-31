@@ -632,26 +632,6 @@ var errorHandler = {
 	}
 }
 async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube, user, res, speech) {
-	if (data.index == 0 && type) {
-		return new Promise((resolve, reject) => {
-			var playlist = data.pitems.slice(0, 2);
-			playlist.forEachEnd((video, cb) => {
-				youtubedl(getID(RI, video), type, RI)
-					.then(async function(link) {
-						var plink = await preserveLink(RI, link, getID(RI, video));
-						if (plink == null) {
-							cb();
-							return;
-						}
-						res = res.addVideoAppLaunchDirective(plink);
-						cb();
-					})
-			}, () => {
-				resolve(res);
-			});
-		})
-	}
-
 
 	data.downloaded = false;
 	if (data.index >= data.length) {
