@@ -152,10 +152,17 @@ Array.prototype.random = function () {
 	return this[~~(Math.random() * (this.length - 1))]
 }
 Array.prototype.forEachEnd = function (func, cb) {
-	for (var i = 0; i < this.length; ++i)
-		func(this[i]);
-	if (typeof cb === 'function')
-		cb();
+	function t(i) {
+		if (i == this.length) {
+			if (typeof cb === 'function')
+				cb();
+			return;
+		}
+		func(this[i], function() {
+			t(i+1);
+		})
+	}
+	t(0)
 }
 
 global.iftry = function (func) {
