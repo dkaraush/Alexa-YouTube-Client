@@ -755,7 +755,11 @@ function getID(RI, videoitem) {
 function youtubedl(id, type, islive, RI) {
 	return new Promise(async function (resolve, reject) {
 		var resolved = false;
-		var args = ["--no-cache-dir", "-f", (islive ? "m3u8" : (type ? "mp4" : "m4a")), "-g", "https://www.youtube.com/watch?v=" + id];
+		var args = ["--no-cache-dir", "-g", "https://www.youtube.com/watch?v=" + id];
+		if (!islive) {
+			args.unshift(type ? "mp4" : "m4a");
+			args.unshift('-f');
+		}
 		debug(RI, "[youtube-dl] getting video for "+id+". (args: " + args.join(" ") + ")");
 		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", args);
 		youtubedl.stdout.on('data', function (data) {
