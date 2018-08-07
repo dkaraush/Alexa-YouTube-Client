@@ -210,10 +210,10 @@ var templates = {
 		"EVENT_REQUEST": event => event.req,
 		"EVENT_RESPONSE": event => event.res,
 		"EVENT_PLAYERDATA_WAS": event => {
-			var pd = event.beforePlayerData;
+			var pd = Object.assign({}, event.beforePlayerData);
 			if (pd.pitems && typeof pd.index === 'number') {
 				var wasLength = pd.pitems.length;
-				pd.pitems = pd.pitems.slice(pd.index-1, 3);
+				pd.pitems = pd.pitems.slice(pd.index==0?0:pd.index-1, (pd.index==0?0:pd.index-1)+3);
 				if (pd.index-1 > 0)
 					pd.pitems.unshift("...");
 				if (pd.index+1 < wasLength)
