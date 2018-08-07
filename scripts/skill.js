@@ -712,7 +712,7 @@ async function runVideo(RI, requestname, data, cantalk, behavior, type, youtube,
 		return res.addAudioPlayerPlayDirective(behavior, preservedlink, videoId, offset, behavior == "ENQUEUE" ? waslasttoken : null, metadata(data.pitems[data.index]));
 	}
 	return new Promise((resolve, reject) => {
-		youtubedl(videoId, type, RI)
+		youtubedl(videoId, type, data.pitems[data.index].duration=="PT0S", RI)
 			.then(async function (link) {
 				if (blacklist.indexOf(videoId) >= 0)
 					link = redirectVideo(link);
@@ -752,20 +752,11 @@ function getID(RI, videoitem) {
 	}
 	return typeof videoitem.id === "string" ? videoitem.id : videoitem.id.videoId;
 }
-function youtubedl(id, type, RI) {
+function youtubedl(id, type, islive, RI) {
 	return new Promise(async function (resolve, reject) {
 		var resolved = false;
-		var args = ["--no-cache-dir", "-f", (type ? "mp4" : "m4a"), "-g", "https://www.youtube.com/watch?v=" + id];
-		var ip = null;
-		if (UIs[RI] && events[UIs[RI]] && events[UIs[RI]][RI])
-			ip = events[UIs[RI]][RI];
-		if (ip == '127.0.0.1' || ip == '::1' || ip == '::ffff:127.0.0.1')
-			ip = null;
-		if (ip != null) {
-			args.unshift('X-Forwarded-For:'+ip);
-			args.unshift('--add-header');
-		}
-		debug("[youtube-dl] getting video for "+id+". (args: " + args.join(" ") + ")");
+		var args = ["--no-cache-dir", "-f", (islive ? "m3u8" : (type ? "mp4" : "m4a")), "-g", "https://www.youtube.com/watch?v=" + id];
+		debug(RI, "[youtube-dl] getting video for "+id+". (args: " + args.join(" ") + ")");
 		var youtubedl = spawn(config.youtubedlpath || "youtube-dl.exe", args);
 		youtubedl.stdout.on('data', function (data) {
 			if (resolved)
