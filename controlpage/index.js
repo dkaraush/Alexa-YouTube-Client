@@ -222,14 +222,14 @@ var templates = {
 			return JSON.stringify(pd,null,"\t")
 		},
 		"EVENT_PLAYERDATA_NOW": event => {
-			var pd = event.nowPlayerData;
+			var pd = Object.assign({}, event.nowPlayerData);
 			if (pd.pitems && typeof pd.index === 'number') {
 				var wasLength = pd.pitems.length;
-				pd.pitems = pd.pitems.slice(pd.index-1, 3);
+				pd.pitems = pd.pitems.slice(pd.index==0?0:pd.index-1, (pd.index==0?0:pd.index-1)+3);
 				if (pd.index-1 > 0)
-					pd.pitems.unshift("...");
+					pd.pitems.unshift("^^^");
 				if (pd.index+1 < wasLength)
-					pd.pitems.push("...");
+					pd.pitems.push("vvv");
 			}
 			return JSON.stringify(pd,null,"\t")
 		},
@@ -242,17 +242,14 @@ var templates = {
 	"PLAYER_DATA_TEMPLATE": {
 		array: query => playerData[query.id] ? [playerData[query.id]] : [],
 		"JSON": data => {
-			var pd = data;
+			var pd = Object.assign({}, data);
 			if (pd.pitems && typeof pd.index === 'number') {
 				var wasLength = pd.pitems.length;
-				var i = pd.index-1;
-				if (i < 0)
-					i = 0;
-				pd.pitems = pd.pitems.slice(i, 3);
-				if (i > 0)
-					pd.pitems.unshift("...");
-				if (i < wasLength)
-					pd.pitems.push("...");
+				pd.pitems = pd.pitems.slice(pd.index==0?0:pd.index-1, (pd.index==0?0:pd.index-1)+3);
+				if (pd.index-1 > 0)
+					pd.pitems.unshift("^^^");
+				if (pd.index+1 < wasLength)
+					pd.pitems.push("vvv");
 			}
 			return JSON.stringify(pd,null,"\t")
 		}
