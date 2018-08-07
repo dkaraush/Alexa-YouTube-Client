@@ -215,9 +215,9 @@ var templates = {
 				var wasLength = pd.pitems.length;
 				pd.pitems = pd.pitems.slice(pd.index==0?0:pd.index-1, (pd.index==0?0:pd.index-1)+3);
 				if (pd.index-1 > 0)
-					pd.pitems.unshift("...");
+					pd.pitems.unshift("^^^");
 				if (pd.index+1 < wasLength)
-					pd.pitems.push("...");
+					pd.pitems.push("vvv");
 			}
 			return JSON.stringify(pd,null,"\t")
 		},
